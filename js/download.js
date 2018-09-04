@@ -11,8 +11,9 @@ function download() {
                         let mediaId = json.media_id;
                         for (let page in json.images.pages)
                         {
+                            let format = (json.images.pages[page].t === 'j') ? ('.jpg') : ('.png');
                             chrome.downloads.download({
-                                url: 'https://i.nhentai.net/galleries/' + mediaId + '/' + page + '.jpg'
+                                url: 'https://i.nhentai.net/galleries/' + mediaId + '/' + (parseInt(page) + 1) + format
                             });
                         }
                     } else {
