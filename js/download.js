@@ -1,7 +1,7 @@
 function download() {
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         let url = tabs[0].url;
-        if (url.match('https:\/\/nhentai.net\/g\/[0-9]*\/[\/0-9a-z]*')) {
+        if (url.match('https://nhentai.net/g/[0-9]*/[/0-9a-z]*')) {
             let id = url.replace("https://nhentai.net/g/", "").split('/')[0];
             let http = new XMLHttpRequest();
             http.onreadystatechange = function() {
@@ -31,7 +31,7 @@ function download() {
 }
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     let url = tabs[0].url;
-    if (url.match('https:\/\/nhentai.net\/g\/[0-9]*\/[\/0-9a-z]*')) {
+    if (url.match('https://nhentai.net/g/[0-9]*/[/0-9a-z]*')) {
         let id = url.replace("https://nhentai.net/g/", "").split('/')[0];
         let http = new XMLHttpRequest();
         http.onreadystatechange = function() {
