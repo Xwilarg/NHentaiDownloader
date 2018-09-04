@@ -1,2 +1,2 @@
 # NHentaiDownloader
-A chrome extension to download doujinshi from NHentai
+A chrome/firefox extension to download doujinshi from NHentai
