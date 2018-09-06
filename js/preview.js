@@ -7,7 +7,7 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             if (this.readyState === 4) {
                 if (this.status === 200) {
                     let json = JSON.parse(this.responseText);
-                    document.getElementById('action').innerHTML = json.title.pretty + '<br/><input type="button" id="button" value="Download">';
+                    document.getElementById('action').innerHTML = '<h3>' + json.title.pretty + '</h3><div id="center">(' + json.images.pages.length + ' pages)</div><br/><input type="button" id="button" value="Download">';
                     document.getElementById('button').addEventListener('click', chrome.extension.getBackgroundPage().download);
                 } else {
                     document.getElementById('action').innerHTML = "An unexpected error occured (Code " + this.status + ").";
