@@ -9,9 +9,24 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                     let json = JSON.parse(this.responseText);
                     document.getElementById('action').innerHTML = '<h3>' + json.title.pretty + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
                     '</div><br/><input type="button" id="button" value="Download"><br/><br/>Downloads/<input type="text" id="path">';
+                    document.getElementById('path').value = id;
                     document.getElementById('button').addEventListener('click', function()
                     {
-                        document.getElementById('action').innerHTML = chrome.extension.getBackgroundPage().download(url, document.getElementById('path').value); 
+                        http = new XMLHttpRequest();
+                        http.onreadystatechange = function() {
+                            if (this.readyState == 4) {
+                                if (this.status === 200) {
+                                    chrome.extension.getBackgroundPage().download(this.responseText, document.getElementById('path').value);
+                                    document.getElementById('action').innerHTML = "Your files are downloading, thanks for using NHentaiDownloader.";
+                                } else if (this.status === 403) {
+                                    document.getElementById('action').innerHTML = "This extension must be used on a doujinshi page in nhentai.net.";
+                                } else {
+                                    document.getElementById('action').innerHTML = "An unexpected error occured (Code " + this.status + ").";
+                                }
+                            }
+                        }
+                        http.open("GET", 'https://nhentai.net/api/gallery/' + id, true);
+                        http.send();
                     });
                 } else {
                     document.getElementById('action').innerHTML = "An unexpected error occured (Code " + this.status + ").";
