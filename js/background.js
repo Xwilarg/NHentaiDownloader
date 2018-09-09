@@ -18,15 +18,20 @@ function setIcon(url) {
         chrome.browserAction.setIcon({path: "Icon-grey.png"});
 }
 
-function download(answer, path) {
+function download(answer, path, errorCb) {
     let json = JSON.parse(answer);
     let mediaId = json.media_id;
     for (let page in json.images.pages)
     {
         let format = (json.images.pages[page].t === 'j') ? ('.jpg') : ('.png');
+        let filename = '/' + (parseInt(page) + 1) + format;
         chrome.downloads.download({
-            url: 'https://i.nhentai.net/galleries/' + mediaId + '/' + (parseInt(page) + 1) + format,
-            filename: './' + path + '/' + (parseInt(page) + 1) + format
+            url: 'https://i.nhentai.net/galleries/' + mediaId + filename,
+            filename: './' + path + filename
+        }, function(downloadId) {
+            if (downloadId === undefined) {
+                errorCb(chrome.runtime.lastError);
+            }
         });
     }
 }
