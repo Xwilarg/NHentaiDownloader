@@ -1,7 +1,7 @@
 {
     "name": "NHentai Downloader",
     "version": "1.0",
-    "description": "A chrome/firefox extension to download doujinshi from NHentai",
+    "description": "A chrome extension to download doujinshi from NHentai",
     "icons": {
       "64": "Icon.png"
     },
