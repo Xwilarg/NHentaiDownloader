@@ -18,8 +18,7 @@ function setIcon(url) {
         chrome.browserAction.setIcon({path: "Icon-grey.png"});
 }
 
-function download(answer, path, errorCb) {
-    let json = JSON.parse(answer);
+function download(json, path, errorCb) {
     let mediaId = json.media_id;
     for (let page in json.images.pages)
     {
