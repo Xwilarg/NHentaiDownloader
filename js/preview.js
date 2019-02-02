@@ -1,12 +1,15 @@
+// Set to ParsingApi to use API else set to ParsingHtml to scrap HTML
+var Parsing = ParsingHtml;
+
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    let url = tabs[0].url;
-    if (url.match('https://nhentai.net/g/[0-9]*/[/0-9a-z]*')) {
-        let id = url.replace("https://nhentai.net/g/", "").split('/')[0];
+    let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)/.exec(tabs[0].url)
+    if (match !== null)
+    {
         let http = new XMLHttpRequest();
         http.onreadystatechange = function() {
             if (this.readyState === 4) {
                 if (this.status === 200) {
-                    let json = JSON.parse(this.responseText);
+                    let json = JSON.parse(Parsing.GetJson(this.responseText));
                     document.getElementById('action').innerHTML = '<h3 id="center">' + json.title.pretty + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
                     '</div><br/><input type="button" id="button" value="Download"><br/><br/>Downloads/<input type="text" id="path">';
                     let cleanName = "";
@@ -32,7 +35,7 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 }
             }
         };
-        http.open("GET", 'https://nhentai.net/api/gallery/' + id, true);
+        http.open("GET", Parsing.GetUrl(match[1]), true);
         http.send();
     }
     else
