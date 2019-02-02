@@ -2,7 +2,7 @@
 var Parsing = ParsingHtml;
 
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)/.exec(tabs[0].url)
+    let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(tabs[0].url)
     if (match !== null)
     {
         let http = new XMLHttpRequest();
