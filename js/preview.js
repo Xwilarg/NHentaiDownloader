@@ -25,8 +25,13 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                     {
                         chrome.extension.getBackgroundPage().download(json, document.getElementById('path').value, function(error) {
                             document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error.message + '</b>';
+                        }, function(progress) {
+                            if (progress === 100)
+                                document.getElementById('action').innerHTML = 'You files are being downloaded, thanks for using NHentaiDownloaded.';
+                            else
+                                document.getElementById('action').innerHTML = 'Please wait...<br/><progress max="100" value="' + progress + '"></progress>';
                         });
-                        document.getElementById('action').innerHTML = "Your files are downloading, thanks for using NHentaiDownloader.";
+                        document.getElementById('action').innerHTML = 'Please wait...<br/><progress max="100" value="80"></progress>';
                     });
                 } else if (this.status === 403) {
                     document.getElementById('action').innerHTML = "This extension must be used on a doujinshi page in nhentai.net.";

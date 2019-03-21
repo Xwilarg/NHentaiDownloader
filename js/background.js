@@ -18,25 +18,34 @@ function setIcon(url) {
         chrome.browserAction.setIcon({path: "Icon-grey.png"});
 }
 
-function getImage(url) {
-    let xhr = new XMLHttpRequest();
-    xhr.open('GET', url, false);
-    xhr.send();
-    return (xhr.response);
-}
-
-function download(json, path, errorCb) {
+function download(json, path, errorCb, progress) {
+    let totalNumber = json.images.pages.length;
+    let downloaded = 0;
     let mediaId = json.media_id;
-    var zip = new JSZip();
+    let zip = new JSZip();
     zip.folder(path);
     for (let page in json.images.pages)
     {
         let format = (json.images.pages[page].t === 'j') ? ('.jpg') : ('.png');
         let filename = (parseInt(page) + 1) + format;
-        zip.file(path + '/' + filename, getImage('https://i.nhentai.net/galleries/' + mediaId + '/' + filename));
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (this.readyState === 4) {
+                if (this.status === 200) {
+                    zip.file(path + '/' + filename, xhr.response);
+                    downloaded++;
+                    progress(downloaded * 100 / totalNumber);
+                    if (downloaded === totalNumber)
+                    {
+                        zip.generateAsync({type:"blob"})
+                        .then(function(content) {
+                            saveAs(content, path + ".zip");
+                        });
+                    }
+                }
+            }
+        };
+        xhr.open('GET', 'https://i.nhentai.net/galleries/' + mediaId + '/' + filename, true);
+        xhr.send();
     }
-    zip.generateAsync({type:"blob"})
-    .then(function(content) {
-        saveAs(content, path + ".zip");
-    });
 }
