@@ -1,6 +1,6 @@
 {
     "name": "NHentai Downloader",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "A chrome extension to download doujinshi from NHentai",
     "icons": {
       "64": "Icon.png"
@@ -11,11 +11,12 @@
     "permissions": [
       "downloads",
       "tabs",
-      "https://nhentai.net/*"
+      "https://nhentai.net/*",
+      "https://i.nhentai.net/*"
     ],
     "author": "Xwilarg",
     "background": {
-      "scripts": ["js/background.js"]
+      "scripts": ["js/jszip/dist/jszip.min.js", "js/FileSaver.js/dist/FileSaver.min.js", "js/background.js"]
     },
     "manifest_version": 2
   }

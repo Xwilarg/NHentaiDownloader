@@ -11,7 +11,7 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 if (this.status === 200) {
                     let json = JSON.parse(Parsing.GetJson(this.responseText));
                     document.getElementById('action').innerHTML = '<h3 id="center">' + json.title.pretty + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
-                    '</div><br/><input type="button" id="button" value="Download"><br/><br/>Downloads/<input type="text" id="path">';
+                    '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/> .zip';
                     let cleanName = "";
                     json.title.pretty.split('').forEach (function(e) {
                         if ((e >= 'a' && e <= 'z') || (e >= 'A' && e <= 'Z') || (e >= '0' && e <= '9') || e === '-' || e === '_')
