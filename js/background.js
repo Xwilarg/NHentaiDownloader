@@ -28,24 +28,25 @@ function download(json, path, errorCb, progress) {
     {
         let format = (json.images.pages[page].t === 'j') ? ('.jpg') : ('.png');
         let filename = (parseInt(page) + 1) + format;
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (this.readyState === 4) {
-                if (this.status === 200) {
-                    zip.file(path + '/' + filename, xhr.response);
-                    downloaded++;
-                    progress(downloaded * 100 / totalNumber);
-                    if (downloaded === totalNumber)
-                    {
-                        zip.generateAsync({type:"blob"})
-                        .then(function(content) {
-                            saveAs(content, path + ".zip");
-                        });
-                    }
+        fetch('https://i.nhentai.net/galleries/' + mediaId + '/' + filename)
+        .then(function(response) {
+            return (response.blob());
+        })
+        .then(function(blob) {
+            let reader = new FileReader();
+            reader.addEventListener("loadend", function() {
+                zip.file(path + '/' + filename, reader.result);
+                downloaded++;
+                progress(downloaded * 100 / totalNumber);
+                if (downloaded === totalNumber)
+                {
+                    zip.generateAsync({type:"blob"})
+                    .then(function(content) {
+                        saveAs(content, path + ".zip");
+                    });
                 }
-            }
-        };
-        xhr.open('GET', 'https://i.nhentai.net/galleries/' + mediaId + '/' + filename, true);
-        xhr.send();
+             });
+            reader.readAsArrayBuffer(blob);
+        });
     }
 }
