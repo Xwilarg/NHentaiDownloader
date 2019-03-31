@@ -35,7 +35,7 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                     document.getElementById('button').addEventListener('click', function()
                     {
                         chrome.extension.getBackgroundPage().download(json, document.getElementById('path').value, function(error) {
-                            document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error.message + '</b>';
+                            document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
                         }, updateProgress, json.title.pretty);
                         document.getElementById('action').innerHTML = 'Please wait...<br/><progress max="100" value="80"></progress>';
                     });

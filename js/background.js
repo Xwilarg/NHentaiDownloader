@@ -1,5 +1,3 @@
-var currProgress = 100;
-
 chrome.tabs.onUpdated.addListener(function
     (tabId, changeInfo, tab) {
         if (changeInfo.url !== undefined)
@@ -22,6 +20,7 @@ function setIcon(url) {
 
 var progressFunction;
 var doujinshiName;
+var currProgress = 100;
 
 function updateProgress(progress) {
     progressFunction = progress;
@@ -70,7 +69,7 @@ function download(json, path, errorCb, progress, name) {
             reader.readAsArrayBuffer(blob);
         })
         .catch((error) => {
-            progressFunction = 100;
+            currProgress = 100;
             errorCb(error);
         });
     }
