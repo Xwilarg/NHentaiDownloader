@@ -16,3 +16,7 @@ html {
 #center {
     text-align: center;
 }
+
+#progressBar {
+    width: 100%;
+}

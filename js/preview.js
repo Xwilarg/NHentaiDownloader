@@ -5,7 +5,7 @@ function updateProgress(progress, doujinshiName) {
     if (progress === 100)
         document.getElementById('action').innerHTML = 'You files are being downloaded, thanks for using NHentaiDownloader.';
     else
-        document.getElementById('action').innerHTML = 'Downloading ' + doujinshiName + ', please wait...<br/><progress max="100" value="' + progress + '"></progress>';
+        document.getElementById('action').innerHTML = 'Downloading ' + doujinshiName + ', please wait...<br/><progress max="100" id="progressBar" value="' + progress + '"></progress>';
 }
 
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {

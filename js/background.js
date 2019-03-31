@@ -70,7 +70,8 @@ function download(json, path, errorCb, progress, name) {
             reader.readAsArrayBuffer(blob);
         })
         .catch((error) => {
+            progressFunction = 100;
             errorCb(error);
-        });;
+        });
     }
 }
