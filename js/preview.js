@@ -1,7 +1,18 @@
 // Set to ParsingApi to use API else set to ParsingHtml to scrap HTML
 var Parsing = ParsingHtml;
 
+function updateProgress(progress, doujinshiName) {
+    if (progress === 100)
+        document.getElementById('action').innerHTML = 'You files are being downloaded, thanks for using NHentaiDownloader.';
+    else
+        document.getElementById('action').innerHTML = 'Downloading ' + doujinshiName + ', please wait...<br/><progress max="100" value="' + progress + '"></progress>';
+}
+
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    if (!chrome.extension.getBackgroundPage().isDownloadFinished()) {
+        chrome.extension.getBackgroundPage().updateProgress(updateProgress);
+        return;
+    }
     let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(tabs[0].url)
     if (match !== null)
     {
@@ -25,12 +36,7 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                     {
                         chrome.extension.getBackgroundPage().download(json, document.getElementById('path').value, function(error) {
                             document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error.message + '</b>';
-                        }, function(progress) {
-                            if (progress === 100)
-                                document.getElementById('action').innerHTML = 'You files are being downloaded, thanks for using NHentaiDownloader.';
-                            else
-                                document.getElementById('action').innerHTML = 'Please wait...<br/><progress max="100" value="' + progress + '"></progress>';
-                        });
+                        }, updateProgress, json.title.pretty);
                         document.getElementById('action').innerHTML = 'Please wait...<br/><progress max="100" value="80"></progress>';
                     });
                 } else if (this.status === 403) {
