@@ -3,7 +3,7 @@ html {
     color: #202a34;
 }
 
-#button {
+#button, #buttonBack {
     display: block;
     margin-left: auto;
     margin-right: auto;

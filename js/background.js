@@ -27,6 +27,10 @@ function updateProgress(progress) {
     progressFunction(currProgress, doujinshiName);
 }
 
+function goBack() {
+    currProgress = -1;
+}
+
 function isDownloadFinished() {
     return (currProgress === 100);
 }
@@ -34,11 +38,13 @@ function isDownloadFinished() {
 function download(json, path, errorCb, progress, name) {
     progressFunction = progress;
     doujinshiName = name;
+    let currName = name;
     let totalNumber = json.images.pages.length;
     let downloaded = 0;
     let mediaId = json.media_id;
     let zip = new JSZip();
     zip.folder(path);
+    currProgress = 0;
     for (let page in json.images.pages)
     {
         let format = (json.images.pages[page].t === 'j') ? ('.jpg') : ('.png');
@@ -55,9 +61,11 @@ function download(json, path, errorCb, progress, name) {
             let reader = new FileReader();
             reader.addEventListener("loadend", function() {
                 zip.file(path + '/' + filename, reader.result);
-                downloaded++;
-                currProgress = downloaded * 100 / totalNumber;
-                progressFunction(currProgress, doujinshiName);
+                if (currProgress !== -1 && doujinshiName === currName) {
+                    downloaded++;
+                    currProgress = downloaded * 100 / totalNumber;
+                    progressFunction(currProgress, doujinshiName);
+                }
                 if (downloaded === totalNumber)
                 {
                     zip.generateAsync({type:"blob"})

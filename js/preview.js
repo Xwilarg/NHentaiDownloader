@@ -5,15 +5,21 @@ function updateProgress(progress, doujinshiName) {
     if (progress === 100)
         document.getElementById('action').innerHTML = 'You files are being downloaded, thanks for using NHentaiDownloader.';
     else
-        document.getElementById('action').innerHTML = 'Downloading ' + doujinshiName + ', please wait...<br/><progress max="100" id="progressBar" value="' + progress + '"></progress>';
+    {
+        document.getElementById('action').innerHTML = 'Downloading ' + doujinshiName + ', please wait...<br/><progress max="100" id="progressBar" value="' + progress + '"></progress>' +
+        '<br/><br/><input type="button" id="buttonBack" value="Go back"/>';
+        document.getElementById('buttonBack').addEventListener('click', function()
+        {
+            chrome.extension.getBackgroundPage().goBack();
+            updatePreview(currUrl);
+        });
+    }
 }
 
-chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    if (!chrome.extension.getBackgroundPage().isDownloadFinished()) {
-        chrome.extension.getBackgroundPage().updateProgress(updateProgress);
-        return;
-    }
-    let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(tabs[0].url)
+var currUrl;
+
+function updatePreview(url) {
+    let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(url)
     if (match !== null)
     {
         let http = new XMLHttpRequest();
@@ -51,4 +57,13 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     }
     else
         document.getElementById('action').innerHTML = "This extension must be used on a doujinshi page in nhentai.net.";
+}
+
+chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    currUrl = tabs[0].url;
+    if (!chrome.extension.getBackgroundPage().isDownloadFinished()) {
+        chrome.extension.getBackgroundPage().updateProgress(updateProgress);
+        return;
+    }
+    updatePreview(currUrl);
 });
