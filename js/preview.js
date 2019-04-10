@@ -43,7 +43,7 @@ function updatePreview(url) {
                         chrome.extension.getBackgroundPage().download(json, document.getElementById('path').value, function(error) {
                             document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
                         }, updateProgress, json.title.pretty);
-                        document.getElementById('action').innerHTML = 'Please wait...<br/><progress max="100" value="80"></progress>';
+                        updateProgress(0, json.title.pretty);
                     });
                 } else if (this.status === 403) {
                     document.getElementById('action').innerHTML = "This extension must be used on a doujinshi page in nhentai.net.";
