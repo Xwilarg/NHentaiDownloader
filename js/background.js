@@ -45,40 +45,57 @@ function download(json, path, errorCb, progress, name) {
     let zip = new JSZip();
     zip.folder(path);
     currProgress = 0;
-    for (let page in json.images.pages)
-    {
-        let format = (json.images.pages[page].t === 'j') ? ('.jpg') : ('.png');
-        let filename = (parseInt(page) + 1) + format;
-        fetch('https://i.nhentai.net/galleries/' + mediaId + '/' + filename)
-        .then(function(response) {
-            if (response.status === 200) {
-                return (response.blob());
-            } else {
-                throw new Error("Failed to fetch doujinshi page (status " + response.status + "), if the error persist please report it.");
-            }
-        })
-        .then(function(blob) {
-            let reader = new FileReader();
-            reader.addEventListener("loadend", function() {
-                zip.file(path + '/' + filename, reader.result);
-                if (currProgress !== -1 && doujinshiName === currName) {
-                    downloaded++;
-                    currProgress = downloaded * 100 / totalNumber;
-                    progressFunction(currProgress, doujinshiName);
-                }
-                if (downloaded === totalNumber)
-                {
-                    zip.generateAsync({type:"blob"})
-                    .then(function(content) {
-                        saveAs(content, path + ".zip");
+    chrome.storage.sync.get({
+        useZip: true
+    }, function(elems) {
+        for (let page in json.images.pages)
+        {
+            let format = (json.images.pages[page].t === 'j') ? ('.jpg') : ('.png');
+            let filename = (parseInt(page) + 1) + format;
+            if (elems.useZip) {
+                fetch('https://i.nhentai.net/galleries/' + mediaId + '/' + filename)
+                .then(function(response) {
+                    if (response.status === 200) {
+                        return (response.blob());
+                    } else {
+                        throw new Error("Failed to fetch doujinshi page (status " + response.status + "), if the error persist please report it.");
+                    }
+                })
+                .then(function(blob) {
+                    let reader = new FileReader();
+                    reader.addEventListener("loadend", function() {
+                        zip.file(path + '/' + filename, reader.result);
+                        if (currProgress !== -1 && doujinshiName === currName) {
+                            downloaded++;
+                            currProgress = downloaded * 100 / totalNumber;
+                            progressFunction(currProgress, doujinshiName);
+                        }
+                        if (downloaded === totalNumber)
+                        {
+                            zip.generateAsync({type:"blob"})
+                            .then(function(content) {
+                                saveAs(content, path + ".zip");
+                            });
+                        }
                     });
-                }
-             });
-            reader.readAsArrayBuffer(blob);
-        })
-        .catch((error) => {
-            currProgress = 100;
-            errorCb(error);
-        });
-    }
+                    reader.readAsArrayBuffer(blob);
+                })
+                .catch((error) => {
+                    currProgress = 100;
+                    errorCb(error);
+                });
+            } else {
+                let filename = '/' + (parseInt(page) + 1) + format;
+                chrome.downloads.download({
+                    url: 'https://i.nhentai.net/galleries/' + mediaId + filename,
+                    filename: './' + path + filename
+                }, function(downloadId) {
+                    if (downloadId === undefined) {
+                        currProgress = 100;
+                        errorCb("Failed to download doujinshi page (" + chrome.runtime.lastError + "), if the error persist please report it.");
+                    }
+                });
+            }
+        }
+    });
 }
