@@ -12,12 +12,16 @@
       "downloads",
       "tabs",
       "https://nhentai.net/*",
-      "https://i.nhentai.net/*"
+      "https://i.nhentai.net/*",
+      "storage"
     ],
     "author": "Xwilarg",
     "background": {
       "scripts": ["js/jszip/dist/jszip.min.js", "js/FileSaver.js/dist/FileSaver.min.js", "js/background.js"]
     },
-    "options_page": "options.html",
+    "options_ui": {
+      "page": "options.html",
+      "open_in_tab": false
+    },
     "manifest_version": 2
   }
