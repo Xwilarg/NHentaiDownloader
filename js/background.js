@@ -84,7 +84,7 @@ function download(json, path, errorCb, progress, name) {
                     currProgress = 100;
                     errorCb(error);
                 });
-            } else {
+            } else { // We don't need to update progress here because it go too fast anyway (since it just need to launch download)
                 let filename = '/' + (parseInt(page) + 1) + format;
                 chrome.downloads.download({
                     url: 'https://i.nhentai.net/galleries/' + mediaId + filename,
@@ -97,5 +97,7 @@ function download(json, path, errorCb, progress, name) {
                 });
             }
         }
+        currProgress = 100;
+        progressFunction(100, doujinshiName);
     });
 }
