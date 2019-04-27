@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Just a small test to be sure that we can still reach the API
 code=$(curl -s -o /dev/null -w "%{http_code}" https://nhentai.net/api/gallery/161194)
 if [[ $code -eq 200 ]]

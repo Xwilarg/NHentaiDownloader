@@ -1,2 +1,2 @@
 language: generic
-script: sh test.sh
+script: ./test.sh
