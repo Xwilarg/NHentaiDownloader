@@ -1,5 +1,5 @@
 // Set to ParsingApi to use API else set to ParsingHtml to scrap HTML
-var Parsing = ParsingHtml;
+var Parsing = ParsingApi;
 
 function updateProgress(progress, doujinshiName) {
     if (progress === 100)
