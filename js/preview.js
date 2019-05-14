@@ -30,8 +30,13 @@ function updatePreview(url) {
                     chrome.storage.sync.get({
                         useZip: true
                     }, function(elems) {
+                        let extension = "";
+                        if (elems.useZip == "zip")
+                            extension = ".zip";
+                        else if (elems.useZip == "cbz")
+                            extension = ".cbz";
                         document.getElementById('action').innerHTML = '<h3 id="center">' + json.title.pretty + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
-                        '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + ((elems.useZip) ? (' .zip') : (''));
+                        '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
                         let cleanName = "";
                         json.title.pretty.split('').forEach (function(e) {
                             if ((e >= 'a' && e <= 'z') || (e >= 'A' && e <= 'Z') || (e >= '0' && e <= '9') || e === '-' || e === '_')

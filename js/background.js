@@ -52,7 +52,7 @@ function download(json, path, errorCb, progress, name) {
         {
             let format = (json.images.pages[page].t === 'j') ? ('.jpg') : ('.png');
             let filename = (parseInt(page) + 1) + format;
-            if (elems.useZip) {
+            if (elems.useZip != "raw") {
                 fetch('https://i.nhentai.net/galleries/' + mediaId + '/' + filename)
                 .then(function(response) {
                     if (response.status === 200) {
@@ -74,7 +74,10 @@ function download(json, path, errorCb, progress, name) {
                         {
                             zip.generateAsync({type:"blob"})
                             .then(function(content) {
-                                saveAs(content, path + ".zip");
+                                if (elems.useZip == "zip")
+                                    saveAs(content, path + ".zip");
+                                else
+                                    saveAs(content, path + ".cbz");
                             });
                         }
                     });
