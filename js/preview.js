@@ -28,7 +28,7 @@ function updatePreview(url) {
                 if (this.status === 200) {
                     let json = JSON.parse(Parsing.GetJson(this.responseText));
                     chrome.storage.sync.get({
-                        useZip: true
+                        useZip: "zip"
                     }, function(elems) {
                         let extension = "";
                         if (elems.useZip == "zip")

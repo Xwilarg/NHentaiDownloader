@@ -46,7 +46,7 @@ function download(json, path, errorCb, progress, name) {
     zip.folder(path);
     currProgress = 0;
     chrome.storage.sync.get({
-        useZip: true
+        useZip: "zip"
     }, function(elems) {
         for (let page in json.images.pages)
         {
