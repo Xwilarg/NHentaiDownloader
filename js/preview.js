@@ -62,30 +62,35 @@ function doujinshiPreview(id) {
     http.send();
 }
 
-function pagePreview() {
-    let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)<\/div>/g
-    let match;
-    let finalHtml = "";
-    do {
-        match = matchs.exec(document.body.innerHTML);
-        console.log(document.body.innerHTML);
-        if (match !== null) {
-            finalHtml += '<input id="' + match[1] + '" type="checkbox"/>' + match[2];
+chrome.runtime.onMessage.addListener(function(request, _) {
+    if (request.action == "getHtml") {
+        let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)<\/div>/g
+        let match;
+        let finalHtml = "";
+        let i = 0;
+        do {
+            match = matchs.exec(request.source);
+            if (match !== null) {
+                finalHtml += '<input id="' + match[1] + '" type="checkbox"/>' + match[2] + '<br/>';
+                i++;
+            }
+        } while (match);
+        if (finalHtml === "") {
+            document.getElementById('action').innerHTML = "This extension must be used on a page containing doujinshi(s) in nhentai.net.";
+            return;
         }
-    } while (match);
-    if (finalHtml === "") {
-        document.getElementById('action').innerHTML = "This extension must be used on a page containing doujinshi(s) in nhentai.net.";
-        return;
+        document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml;
     }
-    document.getElementById('action').innerHTML = finalHtml;
-}
+});
 
 function updatePreview(url) {
     let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(url)
     if (match !== null) {
         doujinshiPreview(match[1]);
     } else if (url.startsWith("https://nhentai.net")) {
-        pagePreview();
+        chrome.tabs.executeScript(null, {
+            file: "js/getHtml.js" // Get the HTML of the page
+        });
     } else {
         document.getElementById('action').innerHTML = "This extension must be used on a page containing doujinshi(s) in nhentai.net.";
     }
