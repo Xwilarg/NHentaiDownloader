@@ -71,7 +71,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
         do {
             match = matchs.exec(request.source);
             if (match !== null) {
-                finalHtml += '<input id="' + match[1] + '" type="checkbox"/>' + match[2] + '<br/>';
+                finalHtml += '<input id="' + match[1] + '" type="checkbox"/>' + match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "") + '<br/>';
                 i++;
             }
         } while (match);
