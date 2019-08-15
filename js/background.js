@@ -35,15 +35,19 @@ function isDownloadFinished() {
     return (currProgress === 100);
 }
 
-function download(json, path, errorCb, progress, name) {
+function downloadDoujinshi(json, path, errorCb, progress, name) {
+    let zip = new JSZip();
+    zip.folder(path);
+    download(json, path, errorCb, progress, name, zip, true);
+}
+
+function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
     progressFunction = progress;
     doujinshiName = name;
     let currName = name;
     let totalNumber = json.images.pages.length;
     let downloaded = 0;
     let mediaId = json.media_id;
-    let zip = new JSZip();
-    zip.folder(path);
     currProgress = 0;
     chrome.storage.sync.get({
         useZip: "zip"
@@ -70,7 +74,7 @@ function download(json, path, errorCb, progress, name) {
                             currProgress = downloaded * 100 / totalNumber;
                             progressFunction(currProgress, doujinshiName);
                         }
-                        if (downloaded === totalNumber)
+                        if (downloaded === totalNumber && downloadAtEnd)
                         {
                             zip.generateAsync({type:"blob"})
                             .then(function(content) {

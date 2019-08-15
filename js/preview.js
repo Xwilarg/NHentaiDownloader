@@ -45,7 +45,7 @@ function doujinshiPreview(id) {
                     document.getElementById('path').value = cleanName;
                     document.getElementById('button').addEventListener('click', function()
                     {
-                        chrome.extension.getBackgroundPage().download(json, document.getElementById('path').value, function(error) {
+                        chrome.extension.getBackgroundPage().downloadDoujinshi(json, document.getElementById('path').value, function(error) {
                             document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
                         }, updateProgress, json.title.pretty);
                         updateProgress(0, json.title.pretty);
