@@ -18,6 +18,18 @@ function updateProgress(progress, doujinshiName) {
 
 var currUrl;
 
+function cleanName(name) {
+    let cleanName = "";
+    name.forEach (function(e) {
+        if ((e >= 'a' && e <= 'z') || (e >= 'A' && e <= 'Z') || (e >= '0' && e <= '9') || e === '-' || e === '_')
+            cleanName += e;
+        else if (e === ' ')
+            cleanName += '_';
+    });
+    cleanName = cleanName.replace(/_+/g, '_');
+    return cleanName;
+}
+
 function doujinshiPreview(id) {
     let http = new XMLHttpRequest();
     http.onreadystatechange = function() {
@@ -34,15 +46,7 @@ function doujinshiPreview(id) {
                         extension = ".cbz";
                     document.getElementById('action').innerHTML = '<h3 id="center">' + json.title.pretty + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
                     '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
-                    let cleanName = "";
-                    json.title.pretty.split('').forEach (function(e) {
-                        if ((e >= 'a' && e <= 'z') || (e >= 'A' && e <= 'Z') || (e >= '0' && e <= '9') || e === '-' || e === '_')
-                            cleanName += e;
-                        else if (e === ' ')
-                            cleanName += '_';
-                    });
-                    cleanName = cleanName.replace(/_+/g, '_');
-                    document.getElementById('path').value = cleanName;
+                    document.getElementById('path').value = cleanName(json.title.pretty.split(''));
                     document.getElementById('button').addEventListener('click', function()
                     {
                         chrome.extension.getBackgroundPage().downloadDoujinshi(json, document.getElementById('path').value, function(error) {
@@ -79,7 +83,22 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             document.getElementById('action').innerHTML = "This extension must be used on a page containing doujinshi(s) in nhentai.net.";
             return;
         }
-        document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml;
+        let parts = currUrl.split('/')
+        let name;
+        if (parts[parts.length - 1] === "") name = parts[parts.length - 2];
+        else name = parts[parts.length - 1];
+        chrome.storage.sync.get({
+            useZip: "zip"
+        }, function(elems) {
+            let extension = "";
+            if (elems.useZip == "zip")
+                extension = ".zip";
+            else if (elems.useZip == "cbz")
+                extension = ".cbz";
+            document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
+            + '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+            document.getElementById('path').value = name;
+        });
     }
 });
 

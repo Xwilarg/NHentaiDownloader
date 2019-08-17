@@ -41,6 +41,11 @@ function downloadDoujinshi(json, path, errorCb, progress, name) {
     download(json, path, errorCb, progress, name, zip, true);
 }
 
+function downloadAllDoujinshis(allJsons, path, errorCb, progress) {
+    let zip = new JSZip();
+    zip.folder(path);
+}
+
 function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
     progressFunction = progress;
     doujinshiName = name;
