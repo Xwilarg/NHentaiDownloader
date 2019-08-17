@@ -20,7 +20,7 @@ var currUrl;
 
 function cleanName(name) {
     let cleanName = "";
-    name.forEach (function(e) {
+    name.split('').forEach (function(e) {
         if ((e >= 'a' && e <= 'z') || (e >= 'A' && e <= 'Z') || (e >= '0' && e <= '9') || e === '-' || e === '_')
             cleanName += e;
         else if (e === ' ')
@@ -46,7 +46,7 @@ function doujinshiPreview(id) {
                         extension = ".cbz";
                     document.getElementById('action').innerHTML = '<h3 id="center">' + json.title.pretty + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
                     '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
-                    document.getElementById('path').value = cleanName(json.title.pretty.split(''));
+                    document.getElementById('path').value = cleanName(json.title.pretty);
                     document.getElementById('button').addEventListener('click', function()
                     {
                         chrome.extension.getBackgroundPage().downloadDoujinshi(json, document.getElementById('path').value, function(error) {
@@ -97,7 +97,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                 extension = ".cbz";
             document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
             + '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
-            document.getElementById('path').value = name;
+            document.getElementById('path').value = cleanName(name);
         });
     }
 });
