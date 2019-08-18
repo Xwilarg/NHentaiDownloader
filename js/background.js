@@ -55,7 +55,7 @@ function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
                 if (this.status === 200) {
                     let json = JSON.parse(Parsing.GetJson(this.responseText));
                     zip.folder(cleanName(json.title.pretty));
-                    download(json, cleanName(json.title.pretty), errorCb, progress, allDoujinshis[key], zip, length === i);
+                    download(json, cleanName(json.title.pretty), errorCb, progress, allDoujinshis[key], zip, length === i, path);
                 } else {
                     errorCb("Can't download " + key + " (Code " + this.status + ").");
                     return;
@@ -67,7 +67,7 @@ function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
     }
 }
 
-function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
+function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveName = path) {
     progressFunction = progress;
     doujinshiName = name;
     let currName = name;
@@ -108,9 +108,9 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
                             zip.generateAsync({type:"blob"})
                             .then(function(content) {
                                 if (elems.useZip == "zip")
-                                    saveAs(content, path + ".zip");
+                                    saveAs(content, saveName + ".zip");
                                 else
-                                    saveAs(content, path + ".cbz");
+                                    saveAs(content, saveName + ".cbz");
                             });
                         }
                     });
