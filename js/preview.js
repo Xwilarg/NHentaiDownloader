@@ -41,7 +41,7 @@ function doujinshiPreview(id) {
                         chrome.extension.getBackgroundPage().downloadDoujinshi(json, document.getElementById('path').value, function(error) {
                             document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
                         }, updateProgress, json.title.pretty);
-                        updateProgress(0, json.title.pretty);
+                        updateProgress(0, json.title.pretty, false);
                     });
                 });
             } else if (this.status === 403) {
@@ -112,7 +112,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                     chrome.extension.getBackgroundPage().downloadAllDoujinshis(allDoujinshis, finalName, function(error) {
                         document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
                     }, updateProgress);
-                    updateProgress(0, finalName);
+                    updateProgress(0, finalName, false);
                 } else {
                     document.getElementById('action').innerHTML = "You must select at least one element to download.";
                 }
