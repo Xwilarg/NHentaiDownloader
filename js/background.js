@@ -67,6 +67,71 @@ function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
     }
 }
 
+function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId) {
+    chrome.storage.sync.get({
+        useZip: "zip"
+    }, function(elems) {
+        let page = json.images.pages[downloaded];
+        let format;
+        if (page.t === "j") format = '.jpg';
+        else if (page.t === "p") format = '.png';
+        else format = '.gif';
+        let filename = (parseInt(downloaded) + 1) + format;
+        if (elems.useZip !== "raw") {
+            fetch('https://i.nhentai.net/galleries/' + mediaId + '/' + filename)
+            .then(function(response) {
+                if (response.status === 200) {
+                    return (response.blob());
+                } else {
+                    throw new Error("Failed to fetch doujinshi page (status " + response.status + "), if the error persist please report it.");
+                }
+            })
+            .then(function(blob) {
+                let reader = new FileReader();
+                reader.addEventListener("loadend", function() {
+                    zip.file(path + '/' + filename, reader.result);
+                    if (currProgress !== -1 && doujinshiName === currName) {
+                        downloaded++;
+                        currProgress = downloaded * 100 / totalNumber;
+                        progressFunction(currProgress, doujinshiName, downloadAtEnd);
+                    }
+                    if (downloaded === totalNumber)
+                    {
+                        if (downloadAtEnd) {
+                            zip.generateAsync({type:"blob"})
+                            .then(function(content) {
+                                if (elems.useZip == "zip")
+                                    saveAs(content, saveName + ".zip");
+                                else
+                                    saveAs(content, saveName + ".cbz");
+                            });
+                        }
+                    } else {
+                        downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId);
+                    }
+                });
+                reader.readAsArrayBuffer(blob);
+            })
+            .catch((error) => {
+                currProgress = 100;
+                errorCb(error);
+            });
+        } else { // We don't need to update progress here because it go too fast anyway (since it just need to launch download)
+            let filename = '/' + (parseInt(downloaded) + 1) + format;
+            chrome.downloads.download({
+                url: 'https://i.nhentai.net/galleries/' + mediaId + filename,
+                filename: './' + path + filename
+            }, function(downloadId) {
+                if (downloadId === undefined) {
+                    currProgress = 100;
+                    errorCb("Failed to download doujinshi page (" + chrome.runtime.lastError + "), if the error persist please report it.");
+                }
+            });
+            downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded + 1, mediaId);
+        }
+    });
+}
+
 function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveName = path) {
     progressFunction = progress;
     doujinshiName = name;
@@ -78,64 +143,10 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveN
     chrome.storage.sync.get({
         useZip: "zip"
     }, function(elems) {
-        for (let page in json.images.pages)
-        {
-            let format;
-            if (json.images.pages[page].t === "j") format = '.jpg';
-            else if (json.images.pages[page].t === "p") format = '.png';
-            else format = '.gif';
-            let filename = (parseInt(page) + 1) + format;
-            if (elems.useZip != "raw") {
-                fetch('https://i.nhentai.net/galleries/' + mediaId + '/' + filename)
-                .then(function(response) {
-                    if (response.status === 200) {
-                        return (response.blob());
-                    } else {
-                        throw new Error("Failed to fetch doujinshi page (status " + response.status + "), if the error persist please report it.");
-                    }
-                })
-                .then(function(blob) {
-                    let reader = new FileReader();
-                    reader.addEventListener("loadend", function() {
-                        zip.file(path + '/' + filename, reader.result);
-                        if (currProgress !== -1 && doujinshiName === currName) {
-                            downloaded++;
-                            currProgress = downloaded * 100 / totalNumber;
-                            progressFunction(currProgress, doujinshiName, downloadAtEnd);
-                        }
-                        if (downloaded === totalNumber && downloadAtEnd)
-                        {
-                            zip.generateAsync({type:"blob"})
-                            .then(function(content) {
-                                if (elems.useZip == "zip")
-                                    saveAs(content, saveName + ".zip");
-                                else
-                                    saveAs(content, saveName + ".cbz");
-                            });
-                        }
-                    });
-                    reader.readAsArrayBuffer(blob);
-                })
-                .catch((error) => {
-                    currProgress = 100;
-                    errorCb(error);
-                    return
-                });
-            } else { // We don't need to update progress here because it go too fast anyway (since it just need to launch download)
-                let filename = '/' + (parseInt(page) + 1) + format;
-                chrome.downloads.download({
-                    url: 'https://i.nhentai.net/galleries/' + mediaId + filename,
-                    filename: './' + path + filename
-                }, function(downloadId) {
-                    if (downloadId === undefined) {
-                        currProgress = 100;
-                        errorCb("Failed to download doujinshi page (" + chrome.runtime.lastError + "), if the error persist please report it.");
-                        return;
-                    }
-                });
-            }
+        if (elems.useZip === "raw") {
+            currProgress = 100;
+            progressFunction(currProgress, doujinshiName, true);
         }
-        currProgress = 100;
-        progressFunction(100, doujinshiName, downloadAtEnd);
     });
+    downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, 0);
 }
