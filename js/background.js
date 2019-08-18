@@ -43,31 +43,34 @@ function downloadDoujinshi(json, path, errorCb, progress, name) {
     download(json, path, errorCb, progress, name, zip, true);
 }
 
+function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i, allKeys) {
+    let key = allKeys[i];
+    let http = new XMLHttpRequest();
+    http.onreadystatechange = function() {
+        if (this.readyState === 4) {
+            if (this.status === 200) {
+                let json = JSON.parse(Parsing.GetJson(this.responseText));
+                zip.folder(cleanName(json.title.pretty));
+                download(json, cleanName(json.title.pretty), errorCb, progress, allDoujinshis[key], zip, length === i + 1, path, function() {
+                    downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i + 1, allKeys);
+                });
+            } else {
+                errorCb("Can't download " + key + " (Code " + this.status + ").");
+                return;
+            }
+        }
+    };
+    http.open("GET", Parsing.GetUrl(key), true);
+    http.send();
+}
+
 function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
     let zip = new JSZip();
     let length = Object.keys(allDoujinshis).length;
-    let i = 0;
-    for (let key in allDoujinshis) {
-        i++;
-        let http = new XMLHttpRequest();
-        http.onreadystatechange = function() {
-            if (this.readyState === 4) {
-                if (this.status === 200) {
-                    let json = JSON.parse(Parsing.GetJson(this.responseText));
-                    zip.folder(cleanName(json.title.pretty));
-                    download(json, cleanName(json.title.pretty), errorCb, progress, allDoujinshis[key], zip, length === i, path);
-                } else {
-                    errorCb("Can't download " + key + " (Code " + this.status + ").");
-                    return;
-                }
-            }
-        };
-        http.open("GET", Parsing.GetUrl(key), true);
-        http.send();
-    }
+    downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, 0, Object.keys(allDoujinshis));
 }
 
-function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId) {
+function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next) {
     chrome.storage.sync.get({
         useZip: "zip"
     }, function(elems) {
@@ -105,9 +108,11 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                                 else
                                     saveAs(content, saveName + ".cbz");
                             });
+                        } else if (next !== undefined) {
+                            next();
                         }
                     } else {
-                        downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId);
+                        downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next);
                     }
                 });
                 reader.readAsArrayBuffer(blob);
@@ -127,14 +132,17 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                     errorCb("Failed to download doujinshi page (" + chrome.runtime.lastError + "), if the error persist please report it.");
                 }
             });
-            if (downloaded + 1 !== totalNumber) {
-                downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded + 1, mediaId);
+            downloaded++;
+            if (downloaded !== totalNumber) {
+                downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next);
+            } else if (!downloadAtEnd && next !== undefined) {
+                next();
             }
         }
     });
 }
 
-function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveName = path) {
+function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveName = path, next = undefined) {
     progressFunction = progress;
     doujinshiName = name;
     let currName = name;
@@ -150,5 +158,5 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveN
             progressFunction(currProgress, doujinshiName, true);
         }
     });
-    downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, 0);
+    downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next);
 }

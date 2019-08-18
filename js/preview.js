@@ -3,7 +3,7 @@ var Parsing = ParsingApi;
 
 function updateProgress(progress, doujinshiName, downloadAtEnd) {
     if (progress === 100 && downloadAtEnd)
-        document.getElementById('action').innerHTML = 'We are preparing your file, thanks for using NHentaiDownloader.<br/>This can take few minutes.';
+        document.getElementById('action').innerHTML = 'We are preparing your file, thanks for using NHentaiDownloader.<br/>This can take several minutes.';
     else
     {
         document.getElementById('action').innerHTML = 'Downloading ' + doujinshiName + ', please wait...<br/><progress max="100" id="progressBar" value="' + progress + '"></progress>' +
