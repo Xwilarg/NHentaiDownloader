@@ -1,8 +1,8 @@
 // Set to ParsingApi to use API else set to ParsingHtml to scrap HTML, if you change this value also change it in background.js
 var Parsing = ParsingApi;
 
-function updateProgress(progress, doujinshiName) {
-    if (progress === 100)
+function updateProgress(progress, doujinshiName, downloadAtEnd) {
+    if (progress === 100 && downloadAtEnd)
         document.getElementById('action').innerHTML = 'You files are being downloaded, thanks for using NHentaiDownloader.';
     else
     {
@@ -17,18 +17,6 @@ function updateProgress(progress, doujinshiName) {
 }
 
 var currUrl;
-
-function cleanName(name) {
-    let cleanName = "";
-    name.split('').forEach (function(e) {
-        if ((e >= 'a' && e <= 'z') || (e >= 'A' && e <= 'Z') || (e >= '0' && e <= '9') || e === '-' || e === '_')
-            cleanName += e;
-        else if (e === ' ')
-            cleanName += '_';
-    });
-    cleanName = cleanName.replace(/_+/g, '_');
-    return cleanName;
-}
 
 // Display popup for a doujinshi
 function doujinshiPreview(id) {

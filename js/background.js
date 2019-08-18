@@ -24,9 +24,9 @@ var progressFunction;
 var doujinshiName;
 var currProgress = 100;
 
-function updateProgress(progress) {
+function updateProgress(progress, downloadAtEnd) {
     progressFunction = progress;
-    progressFunction(currProgress, doujinshiName);
+    progressFunction(currProgress, doujinshiName, downloadAtEnd);
 }
 
 function goBack() {
@@ -45,7 +45,6 @@ function downloadDoujinshi(json, path, errorCb, progress, name) {
 
 function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
     let zip = new JSZip();
-    zip.folder(path);
     let length = Object.keys(allDoujinshis).length;
     let i = 0;
     for (let key in allDoujinshis) {
@@ -55,7 +54,8 @@ function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
             if (this.readyState === 4) {
                 if (this.status === 200) {
                     let json = JSON.parse(Parsing.GetJson(this.responseText));
-                    download(json, path, errorCb, progress, allDoujinshis[key], zip, length === i);
+                    zip.folder(cleanName(json.title.pretty));
+                    download(json, cleanName(json.title.pretty), errorCb, progress, allDoujinshis[key], zip, length === i);
                 } else {
                     errorCb("Can't download " + key + " (Code " + this.status + ").");
                     return;
@@ -82,7 +82,7 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
         {
             let format;
             if (json.images.pages[page].t === "j") format = '.jpg';
-            else if (json.images.pages[page] === "p") format = '.png';
+            else if (json.images.pages[page].t === "p") format = '.png';
             else format = '.gif';
             let filename = (parseInt(page) + 1) + format;
             if (elems.useZip != "raw") {
@@ -101,7 +101,7 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
                         if (currProgress !== -1 && doujinshiName === currName) {
                             downloaded++;
                             currProgress = downloaded * 100 / totalNumber;
-                            progressFunction(currProgress, doujinshiName);
+                            progressFunction(currProgress, doujinshiName, downloadAtEnd);
                         }
                         if (downloaded === totalNumber && downloadAtEnd)
                         {
@@ -130,11 +130,12 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
                     if (downloadId === undefined) {
                         currProgress = 100;
                         errorCb("Failed to download doujinshi page (" + chrome.runtime.lastError + "), if the error persist please report it.");
+                        return;
                     }
                 });
             }
         }
         currProgress = 100;
-        progressFunction(100, doujinshiName);
+        progressFunction(100, doujinshiName, downloadAtEnd);
     });
 }
