@@ -30,6 +30,7 @@ function cleanName(name) {
     return cleanName;
 }
 
+// Display popup for a doujinshi
 function doujinshiPreview(id) {
     let http = new XMLHttpRequest();
     http.onreadystatechange = function() {
@@ -66,19 +67,20 @@ function doujinshiPreview(id) {
     http.send();
 }
 
+// Display popup for many doujinshis
 chrome.runtime.onMessage.addListener(function(request, _) {
     if (request.action == "getHtml") {
         let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)<\/div>/g
         let match;
         let finalHtml = "";
+        let allIds = [];
         let i = 0;
-        let allDoujinshis = {};
         do {
             match = matchs.exec(request.source);
             if (match !== null) {
-                let tmpName =  match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "");
-                allDoujinshis[match[1]] = tmpName;
-                finalHtml += '<input id="' + match[1] + '" type="checkbox"/>' + tmpName + '<br/>';
+                let tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
+                finalHtml += '<input id="' + match[1] + '" name="' + tmpName + '" type="checkbox"/>' + tmpName + '<br/>';
+                allIds.push(match[1]);
                 i++;
             }
         } while (match);
@@ -103,10 +105,22 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             document.getElementById('path').value = cleanName(name);
             document.getElementById('button').addEventListener('click', function()
             {
-                chrome.extension.getBackgroundPage().downloadAllDoujinshis(allDoujinshis, document.getElementById('path').value, function(error) {
-                    document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
-                }, updateProgress);
-                updateProgress(0, json.title.pretty);
+                let allDoujinshis = {};
+                allIds.forEach(function(id) {
+                    elem = document.getElementById(id);
+                    if (elem.checked) {
+                        allDoujinshis[id] = elem.name;
+                    }
+                })
+                if (Object.keys(allDoujinshis).length > 0) {
+                    let finalName = document.getElementById('path').value;
+                    chrome.extension.getBackgroundPage().downloadAllDoujinshis(allDoujinshis, finalName, function(error) {
+                        document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
+                    }, updateProgress);
+                    updateProgress(0, finalName);
+                } else {
+                    document.getElementById('action').innerHTML = "You must select at least one element to download.";
+                }
             });
         });
     }

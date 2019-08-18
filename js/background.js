@@ -46,7 +46,7 @@ function downloadDoujinshi(json, path, errorCb, progress, name) {
 function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
     let zip = new JSZip();
     zip.folder(path);
-    let length = allDoujinshis.length;
+    let length = Object.keys(allDoujinshis).length;
     let i = 0;
     for (let key in allDoujinshis) {
         i++;
@@ -81,8 +81,8 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
         for (let page in json.images.pages)
         {
             let format;
-            if (json.images.pages[page].t === 'j') format = '.jpg';
-            else if (json.images.pages[page] === 'p') format = '.png';
+            if (json.images.pages[page].t === "j") format = '.jpg';
+            else if (json.images.pages[page] === "p") format = '.png';
             else format = '.gif';
             let filename = (parseInt(page) + 1) + format;
             if (elems.useZip != "raw") {
@@ -119,6 +119,7 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
                 .catch((error) => {
                     currProgress = 100;
                     errorCb(error);
+                    return
                 });
             } else { // We don't need to update progress here because it go too fast anyway (since it just need to launch download)
                 let filename = '/' + (parseInt(page) + 1) + format;
