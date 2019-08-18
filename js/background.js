@@ -127,7 +127,9 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                     errorCb("Failed to download doujinshi page (" + chrome.runtime.lastError + "), if the error persist please report it.");
                 }
             });
-            downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded + 1, mediaId);
+            if (downloaded + 1 !== totalNumber) {
+                downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded + 1, mediaId);
+            }
         }
     });
 }
