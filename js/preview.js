@@ -99,7 +99,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                     if (elem.checked) {
                         allDoujinshis[id] = elem.name;
                     }
-                })
+                });
                 if (Object.keys(allDoujinshis).length > 0) {
                     let finalName = document.getElementById('path').value;
                     chrome.extension.getBackgroundPage().downloadAllDoujinshis(allDoujinshis, finalName, function(error) {

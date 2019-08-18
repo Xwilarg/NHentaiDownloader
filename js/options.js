@@ -13,5 +13,5 @@ chrome.storage.sync.get({
 useZip.addEventListener('change', function() {
     chrome.storage.sync.set({
         useZip: this.options[this.selectedIndex].value
-    })
+    });
 });
