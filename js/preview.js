@@ -1,4 +1,4 @@
-// Set to ParsingApi to use API else set to ParsingHtml to scrap HTML
+// Set to ParsingApi to use API else set to ParsingHtml to scrap HTML, if you change this value also change it in background.js
 var Parsing = ParsingApi;
 
 function updateProgress(progress, doujinshiName) {
@@ -72,10 +72,13 @@ chrome.runtime.onMessage.addListener(function(request, _) {
         let match;
         let finalHtml = "";
         let i = 0;
+        let allDoujinshis = {};
         do {
             match = matchs.exec(request.source);
             if (match !== null) {
-                finalHtml += '<input id="' + match[1] + '" type="checkbox"/>' + match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "") + '<br/>';
+                let tmpName =  match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "");
+                allDoujinshis[match[1]] = tmpName;
+                finalHtml += '<input id="' + match[1] + '" type="checkbox"/>' + tmpName + '<br/>';
                 i++;
             }
         } while (match);
@@ -96,8 +99,15 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             else if (elems.useZip == "cbz")
                 extension = ".cbz";
             document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
-            + '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+            + '<br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
             document.getElementById('path').value = cleanName(name);
+            document.getElementById('button').addEventListener('click', function()
+            {
+                chrome.extension.getBackgroundPage().downloadAllDoujinshis(allDoujinshis, document.getElementById('path').value, function(error) {
+                    document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
+                }, updateProgress);
+                updateProgress(0, json.title.pretty);
+            });
         });
     }
 });

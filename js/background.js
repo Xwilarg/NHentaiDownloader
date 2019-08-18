@@ -1,12 +1,14 @@
+var Parsing = ParsingApi;
+
 chrome.tabs.onUpdated.addListener(function
-    (tabId, changeInfo, tab) {
+    (_, changeInfo, _) {
         if (changeInfo.url !== undefined)
             setIcon(changeInfo.url);
     }
 );
 
 chrome.tabs.onActivated.addListener(function() {
-    chrome.tabs.getSelected(null,function(tab) {
+    chrome.tabs.getSelected(null, function(tab) {
         setIcon(tab.url);
     });
 });
@@ -41,9 +43,28 @@ function downloadDoujinshi(json, path, errorCb, progress, name) {
     download(json, path, errorCb, progress, name, zip, true);
 }
 
-function downloadAllDoujinshis(allJsons, path, errorCb, progress) {
+function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
     let zip = new JSZip();
     zip.folder(path);
+    let length = allDoujinshis.length;
+    let i = 0;
+    for (let key in allDoujinshis) {
+        i++;
+        let http = new XMLHttpRequest();
+        http.onreadystatechange = function() {
+            if (this.readyState === 4) {
+                if (this.status === 200) {
+                    let json = JSON.parse(Parsing.GetJson(this.responseText));
+                    download(json, path, errorCb, progress, allDoujinshis[key], zip, length === i);
+                } else {
+                    errorCb("Can't download " + key + " (Code " + this.status + ").");
+                    return;
+                }
+            }
+        };
+        http.open("GET", Parsing.GetUrl(key), true);
+        http.send();
+    }
 }
 
 function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
@@ -59,7 +80,10 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd) {
     }, function(elems) {
         for (let page in json.images.pages)
         {
-            let format = (json.images.pages[page].t === 'j') ? ('.jpg') : ('.png');
+            let format;
+            if (json.images.pages[page].t === 'j') format = '.jpg';
+            else if (json.images.pages[page] === 'p') format = '.png';
+            else format = '.gif';
             let filename = (parseInt(page) + 1) + format;
             if (elems.useZip != "raw") {
                 fetch('https://i.nhentai.net/galleries/' + mediaId + '/' + filename)
