@@ -89,8 +89,15 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             else if (elems.useZip == "cbz")
                 extension = ".cbz";
             document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
-            + '<br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+            + '<input type="button" id="invert" value="Invert all"/><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
             document.getElementById('path').value = cleanName(name);
+            document.getElementById('invert').addEventListener('click', function()
+            {
+                allIds.forEach(function(id) {
+                    elem = document.getElementById(id);
+                    elem.checked = !elem.checked;
+                });
+            });
             document.getElementById('button').addEventListener('click', function()
             {
                 let allDoujinshis = {};
