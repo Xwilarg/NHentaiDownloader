@@ -7,3 +7,8 @@ NHentai only allow to download doujinshi in .torrent format so I created this ex
 <br/><br/>
 ![Overview](Preview/Overview.png)<br/>
 ![Folder](Preview/Folder.png)
+
+## You can also download many doujinshi at a time
+
+![Overview](Preview/Overview-many.png)<br/>
+![Folder](Preview/Folder-many.png)
