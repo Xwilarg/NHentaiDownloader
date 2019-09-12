@@ -8,8 +8,11 @@ chrome.tabs.onUpdated.addListener(function
 );
 
 chrome.tabs.onActivated.addListener(function() {
-    chrome.tabs.getSelected(null, function(tab) {
-        setIcon(tab.url);
+    chrome.tabs.query({
+        active: true,
+        currentWindow: true
+    }, function (tabs) {
+        setIcon(tabs[0].url);
     });
 });
 
