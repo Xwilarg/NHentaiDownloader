@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a problem with NHentaiDownloader
+about: Report a problem about NHentaiDownloader
 title: ''
 labels: ''
 assignees: ''
