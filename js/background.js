@@ -73,6 +73,12 @@ function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
     downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, 0, Object.keys(allDoujinshis));
 }
 
+function getNumberWithZeros(nb) {
+    if (nb < 10) return '00' + nb;
+    else if (nb < 100) return '0' + nb;
+    return nb;
+}
+
 function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next) {
     chrome.storage.sync.get({
         useZip: "zip"
@@ -82,9 +88,10 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
         if (page.t === "j") format = '.jpg';
         else if (page.t === "p") format = '.png';
         else format = '.gif';
-        let filename = (parseInt(downloaded) + 1) + format;
+        let filenameParsing = (parseInt(downloaded) + 1) + format; // Name for parsing
+        let filename = getNumberWithZeros(parseInt(downloaded) + 1) + format; // Final file name
         if (elems.useZip !== "raw") {
-            fetch('https://i.nhentai.net/galleries/' + mediaId + '/' + filename)
+            fetch('https://i.nhentai.net/galleries/' + mediaId + '/' + filenameParsing)
             .then(function(response) {
                 if (response.status === 200) {
                     return (response.blob());
@@ -125,9 +132,8 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                 errorCb(error);
             });
         } else { // We don't need to update progress here because it go too fast anyway (since it just need to launch download)
-            let filename = '/' + (parseInt(downloaded) + 1) + format;
             chrome.downloads.download({
-                url: 'https://i.nhentai.net/galleries/' + mediaId + filename,
+                url: 'https://i.nhentai.net/galleries/' + mediaId + '/' + filenameParsing,
                 filename: './' + path + filename
             }, function(downloadId) {
                 if (downloadId === undefined) {
