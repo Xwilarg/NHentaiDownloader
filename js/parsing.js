@@ -21,10 +21,11 @@ var ParsingHtml =
 function cleanName(name) {
     let cleanName = "";
     name.split('').forEach (function(e) {
-        if ((e >= 'a' && e <= 'z') || (e >= 'A' && e <= 'Z') || (e >= '0' && e <= '9') || e === '-' || e === '_')
-            cleanName += e;
-        else if (e === ' ')
+        if (e === ' ')
             cleanName += '_';
+        else if (e !== '/' && e !== '\\' && e !== '?' && e !== '%' && e !== '*' && e !== ':'
+            && e !== '|' && e !== '"' && e != '<' && e != '>' && e !== '.')
+            cleanName += e;
     });
     cleanName = cleanName.replace(/_+/g, '_');
     return cleanName;

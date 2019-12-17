@@ -33,15 +33,27 @@ function doujinshiPreview(id) {
                         extension = ".zip";
                     else if (elems.useZip == "cbz")
                         extension = ".cbz";
-                    document.getElementById('action').innerHTML = '<h3 id="center">' + json.title.pretty + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
-                    '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
-                    document.getElementById('path').value = cleanName(json.title.pretty);
-                    document.getElementById('button').addEventListener('click', function()
-                    {
-                        chrome.extension.getBackgroundPage().downloadDoujinshi(json, document.getElementById('path').value, function(error) {
-                            document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
-                        }, updateProgress, json.title.pretty);
-                        updateProgress(0, json.title.pretty, false);
+                    chrome.storage.sync.get({
+                        displayName: "pretty"
+                    }, function(elems) {
+                        let title;
+                        if (elems.displayName == "pretty") {
+                            title = json.title.pretty;
+                        } else if (elems.displayName === "english") {
+                            title = json.title.english;
+                        } else {
+                            title = json.title.japanese;
+                        }
+                        document.getElementById('action').innerHTML = '<h3 id="center">' + title + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
+                        '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+                        document.getElementById('path').value = cleanName(title);
+                        document.getElementById('button').addEventListener('click', function()
+                        {
+                            chrome.extension.getBackgroundPage().downloadDoujinshi(json, document.getElementById('path').value, function(error) {
+                                document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
+                            }, updateProgress, title);
+                            updateProgress(0, title, false);
+                        });
                     });
                 });
             } else if (this.status === 403) {
