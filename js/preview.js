@@ -26,34 +26,31 @@ function doujinshiPreview(id) {
             if (this.status === 200) {
                 let json = JSON.parse(Parsing.GetJson(this.responseText));
                 chrome.storage.sync.get({
-                    useZip: "zip"
+                    useZip: "zip",
+                    displayName: "pretty"
                 }, function(elems) {
                     let extension = "";
                     if (elems.useZip == "zip")
                         extension = ".zip";
                     else if (elems.useZip == "cbz")
                         extension = ".cbz";
-                    chrome.storage.sync.get({
-                        displayName: "pretty"
-                    }, function(elems) {
-                        let title;
-                        if (elems.displayName == "pretty") {
-                            title = json.title.pretty;
-                        } else if (elems.displayName === "english") {
-                            title = json.title.english;
-                        } else {
-                            title = json.title.japanese;
-                        }
-                        document.getElementById('action').innerHTML = '<h3 id="center">' + title + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
-                        '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
-                        document.getElementById('path').value = cleanName(title);
-                        document.getElementById('button').addEventListener('click', function()
-                        {
-                            chrome.extension.getBackgroundPage().downloadDoujinshi(json, document.getElementById('path').value, function(error) {
-                                document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
-                            }, updateProgress, title);
-                            updateProgress(0, title, false);
-                        });
+                    let title;
+                    if (elems.displayName == "pretty") {
+                        title = json.title.pretty;
+                    } else if (elems.displayName === "english") {
+                        title = json.title.english;
+                    } else {
+                        title = json.title.japanese;
+                    }
+                    document.getElementById('action').innerHTML = '<h3 id="center">' + title + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
+                    '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+                    document.getElementById('path').value = cleanName(title);
+                    document.getElementById('button').addEventListener('click', function()
+                    {
+                        chrome.extension.getBackgroundPage().downloadDoujinshi(json, document.getElementById('path').value, function(error) {
+                            document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
+                        }, updateProgress, title);
+                        updateProgress(0, title, false);
                     });
                 });
             } else if (this.status === 403) {
@@ -70,64 +67,73 @@ function doujinshiPreview(id) {
 // Display popup for many doujinshis
 chrome.runtime.onMessage.addListener(function(request, _) {
     if (request.action == "getHtml") {
-        let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)<\/div>/g
-        let match;
-        let finalHtml = "";
-        let allIds = [];
-        let i = 0;
-        do {
-            match = matchs.exec(request.source);
-            if (match !== null) {
-                let tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
-                finalHtml += '<input id="' + match[1] + '" name="' + tmpName + '" type="checkbox"/>' + tmpName + '<br/>';
-                allIds.push(match[1]);
-                i++;
-            }
-        } while (match);
-        if (finalHtml === "") {
-            document.getElementById('action').innerHTML = "This extension must be used on a page containing doujinshi(s) in nhentai.net.";
-            return;
-        }
-        let parts = currUrl.split('/')
-        let name;
-        if (parts[parts.length - 1] === "") name = parts[parts.length - 2];
-        else name = parts[parts.length - 1];
         chrome.storage.sync.get({
-            useZip: "zip"
+            displayName: "pretty"
         }, function(elems) {
-            let extension = "";
-            if (elems.useZip == "zip")
-                extension = ".zip";
-            else if (elems.useZip == "cbz")
-                extension = ".cbz";
-            document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
-            + '<input type="button" id="invert" value="Invert all"/><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
-            document.getElementById('path').value = cleanName(name);
-            document.getElementById('invert').addEventListener('click', function()
-            {
-                allIds.forEach(function(id) {
-                    elem = document.getElementById(id);
-                    elem.checked = !elem.checked;
+            let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)<\/div>/g
+            let match;
+            let finalHtml = "";
+            let allIds = [];
+            let i = 0;
+            do {
+                match = matchs.exec(request.source);
+                if (match !== null) {
+                    let tmpName;
+                    if (elems.displayName === "pretty") {
+                        tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
+                    } else {
+                        tmpName = match[2].trim();
+                    }
+                    finalHtml += '<input id="' + match[1] + '" name="' + tmpName + '" type="checkbox"/>' + tmpName + '<br/>';
+                    allIds.push(match[1]);
+                    i++;
+                }
+            } while (match);
+            if (finalHtml === "") {
+                document.getElementById('action').innerHTML = "This extension must be used on a page containing doujinshi(s) in nhentai.net.";
+                return;
+            }
+            let parts = currUrl.split('/')
+            let name;
+            if (parts[parts.length - 1] === "") name = parts[parts.length - 2];
+            else name = parts[parts.length - 1];
+            chrome.storage.sync.get({
+                useZip: "zip"
+            }, function(elems) {
+                let extension = "";
+                if (elems.useZip == "zip")
+                    extension = ".zip";
+                else if (elems.useZip == "cbz")
+                    extension = ".cbz";
+                document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
+                + '<input type="button" id="invert" value="Invert all"/><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+                document.getElementById('path').value = cleanName(name);
+                document.getElementById('invert').addEventListener('click', function()
+                {
+                    allIds.forEach(function(id) {
+                        elem = document.getElementById(id);
+                        elem.checked = !elem.checked;
+                    });
                 });
-            });
-            document.getElementById('button').addEventListener('click', function()
-            {
-                let allDoujinshis = {};
-                allIds.forEach(function(id) {
-                    elem = document.getElementById(id);
-                    if (elem.checked) {
-                        allDoujinshis[id] = elem.name;
+                document.getElementById('button').addEventListener('click', function()
+                {
+                    let allDoujinshis = {};
+                    allIds.forEach(function(id) {
+                        elem = document.getElementById(id);
+                        if (elem.checked) {
+                            allDoujinshis[id] = elem.name;
+                        }
+                    });
+                    if (Object.keys(allDoujinshis).length > 0) {
+                        let finalName = document.getElementById('path').value;
+                        chrome.extension.getBackgroundPage().downloadAllDoujinshis(allDoujinshis, finalName, function(error) {
+                            document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
+                        }, updateProgress);
+                        updateProgress(0, finalName, false);
+                    } else {
+                        document.getElementById('action').innerHTML = "You must select at least one element to download.";
                     }
                 });
-                if (Object.keys(allDoujinshis).length > 0) {
-                    let finalName = document.getElementById('path').value;
-                    chrome.extension.getBackgroundPage().downloadAllDoujinshis(allDoujinshis, finalName, function(error) {
-                        document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
-                    }, updateProgress);
-                    updateProgress(0, finalName, false);
-                } else {
-                    document.getElementById('action').innerHTML = "You must select at least one element to download.";
-                }
             });
         });
     }
