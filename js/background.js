@@ -53,9 +53,21 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
         if (this.readyState === 4) {
             if (this.status === 200) {
                 let json = JSON.parse(Parsing.GetJson(this.responseText));
-                zip.folder(cleanName(json.title.pretty));
-                download(json, cleanName(json.title.pretty), errorCb, progress, allDoujinshis[key], zip, length === i + 1, path, function() {
-                    downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i + 1, allKeys);
+                chrome.storage.sync.get({
+                    displayName: "pretty"
+                }, function(elems) {
+                    let title;
+                    if (elems.displayName == "pretty") {
+                        title = json.title.pretty;
+                    } else if (elems.displayName === "english") {
+                        title = json.title.english;
+                    } else {
+                        title = json.title.japanese;
+                    }
+                    zip.folder(cleanName(title));
+                    download(json, cleanName(title), errorCb, progress, allDoujinshis[key], zip, length === i + 1, path, function() {
+                        downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i + 1, allKeys);
+                    });
                 });
             } else {
                 errorCb("Can't download " + key + " (Code " + this.status + ").");
