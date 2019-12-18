@@ -71,66 +71,88 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             useZip: "zip",
             displayName: "pretty"
         }, function(elems) {
-            let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)<\/div>/g
-            let match;
-            let finalHtml = "";
-            let allIds = [];
-            let i = 0;
-            do {
-                match = matchs.exec(request.source);
-                if (match !== null) {
-                    let tmpName;
-                    if (elems.displayName === "pretty") {
-                        tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
+            chrome.storage.local.get({
+                allIds: []
+            }, function(elemsLocal) {
+                let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)<\/div>/g
+                let match;
+                let finalHtml = "";
+                let allIds = [];
+                let i = 0;
+                do {
+                    match = matchs.exec(request.source);
+                    if (match !== null) {
+                        let tmpName;
+                        if (elems.displayName === "pretty") {
+                            tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
+                        } else {
+                            tmpName = match[2].trim();
+                        }
+                        finalHtml += '<input id="' + match[1] + '" name="' + tmpName + '" type="checkbox"/>' + tmpName + '<br/>';
+                        allIds.push(match[1]);
+                        i++;
+                    }
+                } while (match);
+                if (finalHtml === "") {
+                    document.getElementById('action').innerHTML = "This extension must be used on a page containing doujinshi(s) in nhentai.net.";
+                    return;
+                }
+                let parts = currUrl.split('/')
+                let name;
+                if (parts[parts.length - 1] === "") name = parts[parts.length - 2];
+                else name = parts[parts.length - 1];
+                let extension = "";
+                if (elems.useZip == "zip")
+                    extension = ".zip";
+                else if (elems.useZip == "cbz")
+                    extension = ".cbz";
+                document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
+                + '<input type="button" id="invert" value="Invert all"/><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+                document.getElementById('path').value = cleanName(name);
+                document.getElementById('invert').addEventListener('click', function()
+                {
+                    allIds.forEach(function(id) {
+                        elem = document.getElementById(id);
+                        elem.checked = !elem.checked;
+                    });
+                });
+                document.getElementById('button').addEventListener('click', function()
+                {
+                    let allDoujinshis = {};
+                    allIds.forEach(function(id) {
+                        elem = document.getElementById(id);
+                        if (elem.checked) {
+                            allDoujinshis[id] = elem.name;
+                        }
+                    });
+                    if (Object.keys(allDoujinshis).length > 0) {
+                        let finalName = document.getElementById('path').value;
+                        chrome.extension.getBackgroundPage().downloadAllDoujinshis(allDoujinshis, finalName, function(error) {
+                            document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
+                        }, updateProgress);
+                        updateProgress(0, finalName, false);
                     } else {
-                        tmpName = match[2].trim();
-                    }
-                    finalHtml += '<input id="' + match[1] + '" name="' + tmpName + '" type="checkbox"/>' + tmpName + '<br/>';
-                    allIds.push(match[1]);
-                    i++;
-                }
-            } while (match);
-            if (finalHtml === "") {
-                document.getElementById('action').innerHTML = "This extension must be used on a page containing doujinshi(s) in nhentai.net.";
-                return;
-            }
-            let parts = currUrl.split('/')
-            let name;
-            if (parts[parts.length - 1] === "") name = parts[parts.length - 2];
-            else name = parts[parts.length - 1];
-            let extension = "";
-            if (elems.useZip == "zip")
-                extension = ".zip";
-            else if (elems.useZip == "cbz")
-                extension = ".cbz";
-            document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
-            + '<input type="button" id="invert" value="Invert all"/><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
-            document.getElementById('path').value = cleanName(name);
-            document.getElementById('invert').addEventListener('click', function()
-            {
-                allIds.forEach(function(id) {
-                    elem = document.getElementById(id);
-                    elem.checked = !elem.checked;
-                });
-            });
-            document.getElementById('button').addEventListener('click', function()
-            {
-                let allDoujinshis = {};
-                allIds.forEach(function(id) {
-                    elem = document.getElementById(id);
-                    if (elem.checked) {
-                        allDoujinshis[id] = elem.name;
+                        document.getElementById('action').innerHTML = "You must select at least one element to download.";
                     }
                 });
-                if (Object.keys(allDoujinshis).length > 0) {
-                    let finalName = document.getElementById('path').value;
-                    chrome.extension.getBackgroundPage().downloadAllDoujinshis(allDoujinshis, finalName, function(error) {
-                        document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
-                    }, updateProgress);
-                    updateProgress(0, finalName, false);
-                } else {
-                    document.getElementById('action').innerHTML = "You must select at least one element to download.";
-                }
+                allIds.forEach(function(id) {
+                    document.getElementById(id).addEventListener('change', function() {
+                        if (this.checked) {
+                            elemsLocal.allIds.push(id);
+                            chrome.storage.local.set({
+                                allIds: elemsLocal.allIds
+                            });
+                        } else {
+                            elemsLocal.allIds.splice(elemsLocal.allIds.indexOf(id, 1));
+                            chrome.storage.local.set({
+                                allIds: elemsLocal.allIds
+                            });
+                        }
+                    });
+                    if (elemsLocal.allIds.includes(id)) {
+                        document.getElementById(id).checked = true;
+                    }
+                });
             });
         });
     }
@@ -151,6 +173,16 @@ function updatePreview(url) {
 
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     currUrl = tabs[0].url;
+    chrome.storage.local.get({
+        lastUrl: ""
+    }, function(elemsLocal) {
+        if (elemsLocal.lastUrl !== currUrl) {
+            chrome.storage.local.clear();
+            chrome.storage.local.set({
+                lastUrl: currUrl
+            });
+        }
+    });
     if (!chrome.extension.getBackgroundPage().isDownloadFinished()) {
         chrome.extension.getBackgroundPage().updateProgress(updateProgress);
         return;
