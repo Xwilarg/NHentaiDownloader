@@ -68,7 +68,10 @@ function SaveIdInLocalStorage(id, allIds, checked) {
     if (checked) {
         allIds.push(id);
     } else {
-        allIds.splice(allIds.indexOf(id), 1);
+        let index = allIds.indexOf(id);
+        if (index !== -1) {
+            allIds.splice(index, 1);
+        }
     }
     return allIds;
 }
@@ -113,7 +116,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             else if (elems.useZip == "cbz")
                 extension = ".cbz";
             document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
-            + '<input type="button" id="invert" value="Invert all"/><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+            + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
             document.getElementById('path').value = cleanName(name);
             document.getElementById('invert').addEventListener('click', function()
             {
@@ -131,6 +134,15 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                     chrome.storage.local.set({
                         allIds: storageAllIds
                     });
+                });
+            });
+            document.getElementById('remove').addEventListener('click', function()
+            {
+                allIds.forEach(function(id) {
+                    document.getElementById(id).checked = false;
+                });
+                chrome.storage.local.set({
+                    allIds: []
                 });
             });
             document.getElementById('button').addEventListener('click', function()
