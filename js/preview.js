@@ -68,7 +68,7 @@ function SaveIdInLocalStorage(id, allIds, checked) {
     if (checked) {
         allIds.push(id);
     } else {
-        allIds.splice(allIds.indexOf(id, 1));
+        allIds.splice(allIds.indexOf(id), 1);
     }
     return allIds;
 }
