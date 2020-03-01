@@ -58,7 +58,11 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
                 }, function(elems) {
                     let title;
                     if (elems.displayName == "pretty") {
-                        title = json.title.pretty;
+                        if (json.title.pretty === "") {
+                            title = json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '');
+                        } else {
+                            title = json.title.pretty;
+                        }
                     } else if (elems.displayName === "english") {
                         title = json.title.english;
                     } else {
