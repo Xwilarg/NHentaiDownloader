@@ -35,12 +35,18 @@ function doujinshiPreview(id) {
                     else if (elems.useZip == "cbz")
                         extension = ".cbz";
                     let title;
-                    if (elems.displayName == "pretty") {
-                        title = json.title.pretty;
+                    if (elems.displayName === "pretty") {
+                        if (json.title.pretty === "") {
+                            title = json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '');
+                        } else {
+                            title = json.title.pretty;
+                        }
                     } else if (elems.displayName === "english") {
                         title = json.title.english;
-                    } else {
+                    } else if (elems.displayName === "japanese") {
                         title = json.title.japanese;
+                    } else {
+                        title = "NHentai " + id
                     }
                     document.getElementById('action').innerHTML = '<h3 id="center">' + title + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
                     '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;

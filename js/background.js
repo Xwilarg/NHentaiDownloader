@@ -57,7 +57,7 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
                     displayName: "pretty"
                 }, function(elems) {
                     let title;
-                    if (elems.displayName == "pretty") {
+                    if (elems.displayName === "pretty") {
                         if (json.title.pretty === "") {
                             title = json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '');
                         } else {
@@ -65,8 +65,10 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
                         }
                     } else if (elems.displayName === "english") {
                         title = json.title.english;
-                    } else {
+                    } else if (elems.displayName === "japanese") {
                         title = json.title.japanese;
+                    } else {
+                        title = "NHentai " + key
                     }
                     zip.folder(cleanName(title));
                     download(json, cleanName(title), errorCb, progress, allDoujinshis[key], zip, length === i + 1, path, function() {
