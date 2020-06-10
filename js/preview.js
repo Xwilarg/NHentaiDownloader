@@ -94,8 +94,9 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             let finalHtml = "";
             let allIds = [];
             let i = 0;
+            let pageHtml = request.source.replace(/<\/a>/g, '\n');
             do {
-                match = matchs.exec(request.source);
+                match = matchs.exec(pageHtml);
                 if (match !== null) {
                     let tmpName;
                     if (elems.displayName === "pretty") {
