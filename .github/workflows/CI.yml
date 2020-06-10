@@ -20,5 +20,5 @@ jobs:
       with:
         node-version: 14.x
     - run: cd test
-    - run: npm ci
+    - run: npm install
     - run: npm test
