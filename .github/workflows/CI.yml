@@ -19,6 +19,5 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    - run: cd test
-    - run: npm install
-    - run: npm test
+    - run: cd test && npm install
+    - run: cd test && npm test
