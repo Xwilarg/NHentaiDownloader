@@ -6,6 +6,7 @@ You can either go on a doujinshi page to download it, or go to a page containing
 [![Chrome Store](https://developer.chrome.com/webstore/images/ChromeWebStore_BadgeWBorder_v2_206x58.png)](https://chrome.google.com/webstore/detail/nhentai-downloader/dcpdhacgmnhbfaebkcagkakpcighmeol)<br/>
 [![Users](https://img.shields.io/chrome-web-store/users/dcpdhacgmnhbfaebkcagkakpcighmeol.svg?style=flat)](https://chrome.google.com/webstore/detail/nhentai-downloader/dcpdhacgmnhbfaebkcagkakpcighmeol)
 [![Reviews](https://img.shields.io/chrome-web-store/stars/dcpdhacgmnhbfaebkcagkakpcighmeol.svg?style=flat)](https://chrome.google.com/webstore/detail/nhentai-downloader/dcpdhacgmnhbfaebkcagkakpcighmeol)
+[![CI](https://github.com/Xwilarg/NHentaiDownloader/workflows/CI/badge.svg)](https://github.com/Xwilarg/NHentaiDownloader/actions)
 <br/><br/>
 
 ## Single download
