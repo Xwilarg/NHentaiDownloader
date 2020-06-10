@@ -1,0 +1,32 @@
+{
+  "name": "nhentaidownloader",
+  "version": "1.5.7",
+  "description": "A chrome extension to download doujinshi from NHentai",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Xwilarg/NHentaiDownloader.git"
+  },
+  "keywords": [
+    "nhentai",
+    "downloader",
+    "chrome-extension",
+    "doujinshi",
+    "hentai"
+  ],
+  "author": "Xwilarg",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/Xwilarg/NHentaiDownloader/issues"
+  },
+  "homepage": "https://github.com/Xwilarg/NHentaiDownloader#readme",
+  "dependencies": {
+    "mocha": "^7.2.0",
+    "node-fetch": "^2.6.0"
+  }
+}
