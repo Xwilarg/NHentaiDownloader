@@ -142,6 +142,9 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                     chrome.storage.local.set({
                         allIds: storageAllIds
                     });
+                    chrome.tabs.executeScript(null, {
+                        file: "js/updateContent.js" // Update the checkboxs of the page
+                    });
                 });
             });
             document.getElementById('remove').addEventListener('click', function()
@@ -151,6 +154,9 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                 });
                 chrome.storage.local.set({
                     allIds: []
+                });
+                chrome.tabs.executeScript(null, {
+                    file: "js/updateContent.js" // Update the checkboxs of the page
                 });
             });
             document.getElementById('button').addEventListener('click', function()
