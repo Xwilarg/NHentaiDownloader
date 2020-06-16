@@ -1,6 +1,7 @@
 chrome.storage.sync.get({
     useZip: "zip",
-    displayName: "pretty"
+    displayName: "pretty",
+    displayCheckbox: true
 }, function(elems) {
     let select = document.getElementById('useZip');
     for (var i, j = 0; i = select.options[j]; j++) {
@@ -16,6 +17,8 @@ chrome.storage.sync.get({
             break;
         }
     }
+
+    displayCheckbox.checked = elems.displayCheckbox;
 });
 
 useZip.addEventListener('change', function() {
@@ -29,3 +32,9 @@ displayName.addEventListener('change', function() {
         displayName: this.options[this.selectedIndex].value
     });
 });
+
+displayCheckbox.addEventListener('change', function() {
+    chrome.storage.sync.set({
+        displayCheckbox: displayCheckbox.checked
+    });
+})
