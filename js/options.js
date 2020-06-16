@@ -35,6 +35,6 @@ displayName.addEventListener('change', function() {
 
 displayCheckbox.addEventListener('change', function() {
     chrome.storage.sync.set({
-        displayCheckbox: displayCheckbox.checked
+        displayCheckbox: this.checked
     });
 })
