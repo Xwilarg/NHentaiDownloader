@@ -1,5 +1,18 @@
 let tmpIds = [];
 
+chrome.storage.local.get({
+    allIds: [],
+    lastUrl: ""
+}, function(elemsLocal) {
+    if (elemsLocal.lastUrl != location.href)
+    {
+        chrome.storage.local.set({
+            allIds: [],
+            lastUrl: location.href
+        });
+    }
+});
+
 chrome.storage.sync.get({
     displayCheckbox: true
 }, function(elems) {
