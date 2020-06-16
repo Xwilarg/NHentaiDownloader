@@ -117,6 +117,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             let name;
             if (parts[parts.length - 1] === "") name = parts[parts.length - 2];
             else name = parts[parts.length - 1];
+            name = name.replace("q=", "");
             let extension = "";
             if (elems.useZip == "zip")
                 extension = ".zip";
