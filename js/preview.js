@@ -181,6 +181,9 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                             allIds: SaveIdInLocalStorage(id, elemsLocal.allIds, checked)
                         });
                     });
+                    chrome.tabs.executeScript(null, {
+                        file: "js/updateContent.js" // Update the checkboxs of the page
+                    });
                 });
                 chrome.storage.local.get({
                     allIds: []
