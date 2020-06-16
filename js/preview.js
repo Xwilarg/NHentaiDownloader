@@ -89,7 +89,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             useZip: "zip",
             displayName: "pretty"
         }, function(elems) {
-            let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)((<br>)+<input type="checkbox">[^<]+<br>[^<]+<br>[^<]+)?<\/div>/g
+            let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)((<br>)+<input [^>]+>[^<]+<br>[^<]+<br>[^<]+)?<\/div>/g
             let match;
             let finalHtml = "";
             let allIds = [];
