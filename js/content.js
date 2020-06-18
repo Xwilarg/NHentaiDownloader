@@ -38,6 +38,7 @@ chrome.storage.sync.get({
                         allIds: []
                     }, function(elemsLocal) {
                         storageAllIds = elemsLocal.allIds;
+                        document.getElementById(id).value = document.getElementById(id).checked;
                         if (document.getElementById(id).checked) {
                             storageAllIds.push(id);
                         } else {

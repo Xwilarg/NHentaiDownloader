@@ -98,13 +98,18 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             do {
                 match = matchs.exec(pageHtml);
                 if (match !== null) {
+                    let isChecked = false;
+                    if (match[4] !== undefined ) {
+                        var testMatch = pageHtml.match('<input id="' + match[1] + '" type="checkbox"( value="(true|false)")?>');
+                        isChecked = testMatch[2] === "true";
+                    }
                     let tmpName;
                     if (elems.displayName === "pretty") {
                         tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
                     } else {
                         tmpName = match[2].trim();
                     }
-                    finalHtml += '<input id="' + match[1] + '" name="' + tmpName + '" type="checkbox"/>' + tmpName + '<br/>';
+                    finalHtml += '<input id="' + match[1] + '" name="' + tmpName + '" type="checkbox" ' + (isChecked ? "checked" : "") + '/>' + tmpName + '<br/>';
                     allIds.push(match[1]);
                     i++;
                 }
