@@ -49,7 +49,7 @@ function downloadDoujinshi(jsonTmp, path, errorCb, progress, name) {
     } else {
         json = jsonTmp;
     }
-    download(json, path, errorCb, progress, name, zip, true);
+    download(json, path, errorCb, progress, name, zip, true, 1, 1);
 }
 
 function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i, allKeys) {
@@ -77,7 +77,7 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
                         title = "NHentai " + key
                     }
                     zip.folder(cleanName(title));
-                    download(json, cleanName(title), errorCb, progress, allDoujinshis[key], zip, length === i + 1, path, function() {
+                    download(json, cleanName(title), errorCb, progress, allDoujinshis[key], zip, length === i + 1, i + 1, length, path, function() {
                         downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i + 1, allKeys);
                     });
                 });
@@ -103,7 +103,7 @@ function getNumberWithZeros(nb) {
     return nb;
 }
 
-function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next) {
+function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max) {
     chrome.storage.sync.get({
         useZip: "zip"
     }, function(elems) {
@@ -129,16 +129,20 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                     zip.file(path + '/' + filename, reader.result);
                     if (currProgress !== -1 && doujinshiName === currName) {
                         downloaded++;
-                        currProgress = downloaded * 100 / totalNumber;
+                        let each = 50 / max;
+                        let maxTmp = curr * each;
+                        let minTmp = (curr - 1) * each;
+                        let diff = maxTmp - minTmp;
+                        currProgress = (downloaded * diff / totalNumber) + minTmp;
                         try {
-                            progressFunction(currProgress, doujinshiName, false);
+                            progressFunction(currProgress, doujinshiName + '/' + filename, false);
                         } catch (e) { } // Dead object
                     }
                     if (downloaded === totalNumber)
                     {
                         if (downloadAtEnd) {
                             zip.generateAsync({type: "blob"}, function updateCallback(elem) {
-                                progressFunction(elem.percent, elem.currentFile == null ? saveName : elem.currentFile, true);
+                                progressFunction(50 + (elem.percent / 2), elem.currentFile == null ? saveName : elem.currentFile, true);
                             })
                             .then(function(content) {
                                 if (elems.useZip == "zip")
@@ -151,7 +155,7 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                             next();
                         }
                     } else {
-                        downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next);
+                        downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max);
                     }
                 });
                 reader.readAsArrayBuffer(blob);
@@ -172,7 +176,7 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
             });
             downloaded++;
             if (downloaded !== totalNumber) {
-                downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next);
+                downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max);
             } else if (!downloadAtEnd && next !== undefined) {
                 next();
             }
@@ -180,7 +184,7 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
     });
 }
 
-function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveName = path, next = undefined) {
+function download(json, path, errorCb, progress, name, zip, downloadAtEnd, curr, max, saveName = path, next = undefined) {
     progressFunction = progress;
     doujinshiName = name;
     let currName = name;
@@ -198,5 +202,5 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveN
             } catch (e) { } // Dead object
         }
     });
-    downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next);
+    downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max);
 }

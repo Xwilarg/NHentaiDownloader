@@ -105,7 +105,11 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                     let isChecked = false;
                     if (match[4] !== undefined ) {
                         var testMatch = pageHtml.match('<input id="' + match[1] + '" type="checkbox"( value="(true|false)")?>');
-                        isChecked = testMatch[2] === "true";
+                        try {
+                            isChecked = testMatch[2] === "true";
+                        } catch (_) {
+                            isChecked = false;
+                        }
                     }
                     let tmpName;
                     if (elems.displayName === "pretty") {
