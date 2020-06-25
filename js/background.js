@@ -40,9 +40,15 @@ function isDownloadFinished() {
     return (currProgress === 100);
 }
 
-function downloadDoujinshi(json, path, errorCb, progress, name) {
+function downloadDoujinshi(jsonTmp, path, errorCb, progress, name) {
     let zip = new JSZip();
     zip.folder(path);
+    let json;
+    if (typeof browser !== "undefined") { // Firefox
+        json = JSON.parse(JSON.stringify(jsonTmp));
+    } else {
+        json = jsonTmp;
+    }
     download(json, path, errorCb, progress, name, zip, true);
 }
 
@@ -124,7 +130,9 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                     if (currProgress !== -1 && doujinshiName === currName) {
                         downloaded++;
                         currProgress = downloaded * 100 / totalNumber;
-                        progressFunction(currProgress, doujinshiName, downloadAtEnd);
+                        try {
+                            progressFunction(currProgress, doujinshiName, downloadAtEnd);
+                        } catch (e) { } // Dead object
                     }
                     if (downloaded === totalNumber)
                     {
@@ -182,7 +190,9 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveN
     }, function(elems) {
         if (elems.useZip === "raw") {
             currProgress = 100;
-            progressFunction(currProgress, doujinshiName, true);
+            try {
+                progressFunction(currProgress, doujinshiName, true);
+            } catch (e) { } // Dead object
         }
     });
     downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next);
