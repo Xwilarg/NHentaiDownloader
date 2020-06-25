@@ -142,14 +142,19 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                     {
                         if (downloadAtEnd) {
                             zip.generateAsync({type: "blob"}, function updateCallback(elem) {
-                                progressFunction(50 + (elem.percent / 2), elem.currentFile == null ? saveName : elem.currentFile, true);
+                                try {
+                                    progressFunction(50 + (elem.percent / 2), elem.currentFile == null ? saveName : elem.currentFile, true);
+                                } catch (e) { } // Dead object
                             })
                             .then(function(content) {
+                                currProgress = 100;
                                 if (elems.useZip == "zip")
                                     saveAs(content, saveName + ".zip");
                                 else
                                     saveAs(content, saveName + ".cbz");
-                                progressFunction(-1, null, true);
+                                try {
+                                    progressFunction(-1, null, true);
+                                } catch (e) { } // Dead object
                             });
                         } else if (next !== undefined) {
                             next();
