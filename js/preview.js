@@ -1,12 +1,16 @@
 // Set to ParsingApi to use API else set to ParsingHtml to scrap HTML, if you change this value also change it in background.js
 var Parsing = ParsingApi;
 
-function updateProgress(progress, doujinshiName, downloadAtEnd) {
-    if (progress === 100 && downloadAtEnd)
-        document.getElementById('action').innerHTML = 'We are preparing your file, thanks for using NHentaiDownloader.<br/>This can take several minutes.<br/>If you are downloading a lot of doujinshi, this may take a long time.';
-    else
+function updateProgress(progress, doujinshiName, isZipping) {
+    if (isZipping && progress == -1) {document.getElementById('action').innerHTML = 'Your file was downloaded, thanks for using NHentai Downloader.' +
+    '<br/><br/><input type="button" id="buttonBack" value="Go back"/>';
+    document.getElementById('buttonBack').addEventListener('click', function()
     {
-        document.getElementById('action').innerHTML = 'Downloading ' + doujinshiName + ', please wait...<br/><progress max="100" id="progressBar" value="' + progress + '"></progress>' +
+        chrome.extension.getBackgroundPage().goBack();
+        updatePreview(currUrl);
+    });
+    } else {
+        document.getElementById('action').innerHTML = (isZipping ? "Zipping" : "Downloading") + ' ' + doujinshiName + ', please wait...<br/><progress max="100" id="progressBar" value="' + progress + '"></progress>' +
         '<br/><br/><input type="button" id="buttonBack" value="Go back"/>';
         document.getElementById('buttonBack').addEventListener('click', function()
         {

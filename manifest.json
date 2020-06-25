@@ -1,11 +1,6 @@
 {
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "nhentaidownloader@zirk.eu"
-    }
-  },
   "name": "NHentai Downloader",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "A chrome extension to download doujinshi from NHentai",
   "icons": {
     "64": "Icon.png"

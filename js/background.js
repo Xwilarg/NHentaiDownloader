@@ -27,9 +27,9 @@ var progressFunction;
 var doujinshiName;
 var currProgress = 100;
 
-function updateProgress(progress, downloadAtEnd) {
+function updateProgress(progress) {
     progressFunction = progress;
-    progressFunction(currProgress, doujinshiName, downloadAtEnd);
+    progressFunction(currProgress, doujinshiName, false);
 }
 
 function goBack() {
@@ -131,18 +131,21 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                         downloaded++;
                         currProgress = downloaded * 100 / totalNumber;
                         try {
-                            progressFunction(currProgress, doujinshiName, downloadAtEnd);
+                            progressFunction(currProgress, doujinshiName, false);
                         } catch (e) { } // Dead object
                     }
                     if (downloaded === totalNumber)
                     {
                         if (downloadAtEnd) {
-                            zip.generateAsync({type:"blob"})
+                            zip.generateAsync({type: "blob"}, function updateCallback(elem) {
+                                progressFunction(elem.percent, elem.currentFile == null ? saveName : elem.currentFile, true);
+                            })
                             .then(function(content) {
                                 if (elems.useZip == "zip")
                                     saveAs(content, saveName + ".zip");
                                 else
                                     saveAs(content, saveName + ".cbz");
+                                progressFunction(-1, null, true);
                             });
                         } else if (next !== undefined) {
                             next();
@@ -191,7 +194,7 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd, saveN
         if (elems.useZip === "raw") {
             currProgress = 100;
             try {
-                progressFunction(currProgress, doujinshiName, true);
+                progressFunction(currProgress, doujinshiName, false);
             } catch (e) { } // Dead object
         }
     });
