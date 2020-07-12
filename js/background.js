@@ -134,7 +134,9 @@ function downloadAllPagesInternal(allDoujinshis, curr, max, path, errorCb, progr
                             allDoujinshis[match[1]] = tmpName;
                         }
                     } while (match);
-                    downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url, callbackEnd);
+                    downloadAllDoujinshis(allDoujinshis, path + " (" + curr + ")", errorCb, progress, function() {
+                        downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url);
+                    });
                 });
             }
         }
