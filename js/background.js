@@ -37,7 +37,7 @@ function goBack() {
 }
 
 function isDownloadFinished() {
-    return (currProgress === 100);
+    return (currProgress === 100 || currProgress === -1);
 }
 
 function downloadDoujinshi(jsonTmp, path, errorCb, progress, name) {
@@ -91,6 +91,10 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
     http.send();
 }
 
+function downloadAllPages(path, errorCb, progress) {
+
+}
+
 function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
     let zip = new JSZip();
     let length = Object.keys(allDoujinshis).length;
@@ -127,7 +131,10 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                 let reader = new FileReader();
                 reader.addEventListener("loadend", function() {
                     zip.file(path + '/' + filename, reader.result);
-                    if (currProgress !== -1 && doujinshiName === currName) {
+                    if (currProgress == -1) {
+                        return;
+                    }
+                    if (doujinshiName === currName) {
                         downloaded++;
                         let each = 50 / max;
                         let maxTmp = curr * each;

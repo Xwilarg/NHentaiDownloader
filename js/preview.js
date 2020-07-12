@@ -3,7 +3,7 @@ var Parsing = ParsingApi;
 
 function updateProgress(progress, doujinshiName, isZipping) {
     if (isZipping && progress == -1) {document.getElementById('action').innerHTML = 'Your file was downloaded, thanks for using NHentai Downloader.' +
-    '<br/><br/><input type="button" id="buttonBack" value="Go back"/>';
+    '<br/><br/><input type="button" id="buttonBack" value="Go Back"/>';
     document.getElementById('buttonBack').addEventListener('click', function()
     {
         chrome.extension.getBackgroundPage().goBack();
@@ -11,7 +11,7 @@ function updateProgress(progress, doujinshiName, isZipping) {
     });
     } else {
         document.getElementById('action').innerHTML = (isZipping ? "Zipping" : "Downloading") + ' ' + doujinshiName + ', please wait...<br/><progress max="100" id="progressBar" value="' + progress + '"></progress>' +
-        '<br/><br/><input type="button" id="buttonBack" value="Go back"/>';
+        '<br/><br/><input type="button" id="buttonBack" value="Cancel"/>';
         document.getElementById('buttonBack').addEventListener('click', function()
         {
             chrome.extension.getBackgroundPage().goBack();
