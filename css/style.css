@@ -3,7 +3,7 @@ html {
     color: #202a34;
 }
 
-#button, #buttonBack {
+#button, #buttonBack, #buttonAll {
     display: block;
     margin-left: auto;
     margin-right: auto;
@@ -12,6 +12,10 @@ html {
     border: none;
     padding: 15px 32px;
     border-radius: 5px;
+}
+
+#buttonAll {
+    background-color: #888;
 }
 
 #center {

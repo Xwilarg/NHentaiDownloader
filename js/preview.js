@@ -136,8 +136,16 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                 extension = ".zip";
             else if (elems.useZip == "cbz")
                 extension = ".cbz";
-            document.getElementById('action').innerHTML = '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
-            + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+            let nbDownload = 0;
+            let html =  '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
+            + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><br/><input type="button" id="button" value="Download"/>';
+            let lastMatch = /page=([0-9]+)" class="last">/.exec(pageHtml) // Get the number of pages
+            if (lastMatch !== null) {
+                nbDownload = lastMatch[1];
+                html += '<br/><input type="button" id="buttonAll" value="Download all (' + nbDownload + ' pages)"/>';
+            }
+            html += '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+            document.getElementById('action').innerHTML = html;
             document.getElementById('path').value = cleanName(name);
             document.getElementById('invert').addEventListener('click', function()
             {
@@ -191,6 +199,14 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                     document.getElementById('action').innerHTML = "You must select at least one element to download.";
                 }
             });
+            if (nbDownload > 0) {
+                document.getElementById('buttonAll').addEventListener('click', function()
+                {
+                    let choice = confirm("You are going to download " + lastMatch[1] + " pages of doujinshi, are you sure you want to continue?");
+                    if (choice) {
+                    }
+                });
+            }
             allIds.forEach(function(id) {
                 document.getElementById(id).addEventListener('change', function() {
                     let checked = this.checked;
