@@ -204,10 +204,15 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             if (nbDownload > 0) {
                 document.getElementById('buttonAll').addEventListener('click', function()
                 {
+                    let allDoujinshis = {};
+                    allIds.forEach(function(id) {
+                        elem = document.getElementById(id);
+                        allDoujinshis[id] = elem.name;
+                    });
                     let choice = confirm("You are going to download " + nbDownload + " pages of doujinshi, starting at page " + currPage + ". Are you sure you want to continue?");
                     if (choice) {
                         let finalName = document.getElementById('path').value;
-                        chrome.extension.getBackgroundPage().downloadAllPages(allIds, currPage, nbDownload, finalName, function(error) {
+                        chrome.extension.getBackgroundPage().downloadAllPages(allDoujinshis, currPage, nbDownload, finalName, function(error) {
                             document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
                         }, updateProgress, currUrl);
                         updateProgress(0, finalName, false);

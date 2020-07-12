@@ -52,7 +52,7 @@ function downloadDoujinshi(jsonTmp, path, errorCb, progress, name) {
     download(json, path, errorCb, progress, name, zip, true, 1, 1);
 }
 
-function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i, allKeys) {
+function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i, allKeys, callbackEnd) {
     let key = allKeys[i];
     let http = new XMLHttpRequest();
     http.onreadystatechange = function() {
@@ -78,8 +78,8 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
                     }
                     zip.folder(cleanName(title));
                     download(json, cleanName(title), errorCb, progress, allDoujinshis[key], zip, length === i + 1, i + 1, length, path, function() {
-                        downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i + 1, allKeys);
-                    });
+                        downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i + 1, allKeys, callbackEnd);
+                    }, callbackEnd);
                 });
             } else {
                 errorCb("Can't download " + key + " (Code " + this.status + ").");
@@ -92,8 +92,13 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
 }
 
 function downloadAllPages(allDoujinshis, curr, max, path, errorCb, progress, url) {
-    currProgress = 0;
-    downloadAllDoujinshis(allDoujinshis, path + " (" + curr + ")", errorCb, progress);
+    console.log(allDoujinshis);
+    downloadAllDoujinshis(allDoujinshis, path + " (" + curr + ")", errorCb, progress, function() {
+        downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url);
+    });
+}
+
+function downloadAllPagesInternal(allDoujinshis, curr, max, path, errorCb, progress, url, callbackEnd) {
     max--;
     curr++;
     if (max == 0) { // We are done parsing everything
@@ -111,17 +116,27 @@ function downloadAllPages(allDoujinshis, curr, max, path, errorCb, progress, url
     http.onreadystatechange = function() {
         if (this.readyState === 4) {
             if (this.status === 200) {
-                allDoujinshis = [];
+                allDoujinshis = {};
+                let allIds = [];
                 let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)((<br>)+<input [^>]+>[^<]+<br>[^<]+<br>[^<]+)?<\/div>/g
                 let match;
                 let pageHtml =  this.responseText;
                 do {
                     match = matchs.exec(pageHtml);
                     if (match !== null) {
-                        allDoujinshis.push(match[1]);
+                        allIds.push(match[1]);
                     }
                 } while (match);
-                downloadAllPages(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url)
+                /*let allDoujinshis = {};
+                allIds.forEach(function(id) {
+                    elem = document.getElementById(id);
+                    if (elem.checked) {
+                        allDoujinshis[id] = elem.name;
+                    }
+                });*/
+                /*downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url, function() {
+                    downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url);
+                });*/
             }
         }
     };
@@ -129,10 +144,10 @@ function downloadAllPages(allDoujinshis, curr, max, path, errorCb, progress, url
     http.send();
 }
 
-function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
+function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress, callbackEnd = null) {
     let zip = new JSZip();
     let length = Object.keys(allDoujinshis).length;
-    downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, 0, Object.keys(allDoujinshis));
+    downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, 0, Object.keys(allDoujinshis), callbackEnd);
 }
 
 function getNumberWithZeros(nb) {
@@ -141,7 +156,7 @@ function getNumberWithZeros(nb) {
     return nb;
 }
 
-function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max) {
+function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max, callbackEnd) {
     chrome.storage.sync.get({
         useZip: "zip"
     }, function(elems) {
@@ -196,12 +211,15 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
                                 try {
                                     progressFunction(-1, null, true);
                                 } catch (e) { } // Dead object
+                                if (callbackEnd != null) {
+                                    callbackEnd();
+                                }
                             });
                         } else if (next !== undefined) {
                             next();
                         }
                     } else {
-                        downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max);
+                        downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max, callbackEnd);
                     }
                 });
                 reader.readAsArrayBuffer(blob);
@@ -230,7 +248,7 @@ function downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName,
     });
 }
 
-function download(json, path, errorCb, progress, name, zip, downloadAtEnd, curr, max, saveName = path, next = undefined) {
+function download(json, path, errorCb, progress, name, zip, downloadAtEnd, curr, max, saveName = path, next = undefined, callbackEnd = null) {
     progressFunction = progress;
     doujinshiName = name;
     let currName = name;
@@ -248,5 +266,5 @@ function download(json, path, errorCb, progress, name, zip, downloadAtEnd, curr,
             } catch (e) { } // Dead object
         }
     });
-    downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max);
+    downloadPageInternal(json, path, errorCb, zip, downloadAtEnd, saveName, currName, totalNumber, downloaded, mediaId, next, curr, max, callbackEnd);
 }
