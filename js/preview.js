@@ -137,11 +137,13 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             else if (elems.useZip == "cbz")
                 extension = ".cbz";
             let nbDownload = 0;
+            let currPage = 0;
             let html =  '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
             + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><br/><input type="button" id="button" value="Download"/>';
             let lastMatch = /page=([0-9]+)" class="last">/.exec(pageHtml) // Get the number of pages
             if (lastMatch !== null) {
-                nbDownload = lastMatch[1];
+                currPage = parseInt(/page=([0-9]+)" class="page current">/.exec(pageHtml)[1]);
+                nbDownload = parseInt(lastMatch[1]) - currPage + 1;
                 html += '<br/><input type="button" id="buttonAll" value="Download all (' + nbDownload + ' pages)"/>';
             }
             html += '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
@@ -202,8 +204,13 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             if (nbDownload > 0) {
                 document.getElementById('buttonAll').addEventListener('click', function()
                 {
-                    let choice = confirm("You are going to download " + lastMatch[1] + " pages of doujinshi, are you sure you want to continue?");
+                    let choice = confirm("You are going to download " + nbDownload + " pages of doujinshi, starting at page " + currPage + ". Are you sure you want to continue?");
                     if (choice) {
+                        let finalName = document.getElementById('path').value;
+                        chrome.extension.getBackgroundPage().downloadAllPages(allIds, currPage, nbDownload, finalName, function(error) {
+                            document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
+                        }, updateProgress, currUrl);
+                        updateProgress(0, finalName, false);
                     }
                 });
             }

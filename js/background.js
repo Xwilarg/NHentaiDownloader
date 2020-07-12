@@ -91,8 +91,42 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
     http.send();
 }
 
-function downloadAllPages(path, errorCb, progress) {
-
+function downloadAllPages(allDoujinshis, curr, max, path, errorCb, progress, url) {
+    currProgress = 0;
+    downloadAllDoujinshis(allDoujinshis, path + " (" + curr + ")", errorCb, progress);
+    max--;
+    curr++;
+    if (max == 0) { // We are done parsing everything
+        return;
+    }
+    let m = /page=([0-9]+)/.exec(url)
+    if (m !== null) {
+        url = url.replace(m[0], "page=" + curr);
+    } else if (url.includes("?")) {
+        url += "&page=" + curr
+    } else {
+        url += "?page=" + curr
+    }
+    let http = new XMLHttpRequest();
+    http.onreadystatechange = function() {
+        if (this.readyState === 4) {
+            if (this.status === 200) {
+                allDoujinshis = [];
+                let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)((<br>)+<input [^>]+>[^<]+<br>[^<]+<br>[^<]+)?<\/div>/g
+                let match;
+                let pageHtml =  this.responseText;
+                do {
+                    match = matchs.exec(pageHtml);
+                    if (match !== null) {
+                        allDoujinshis.push(match[1]);
+                    }
+                } while (match);
+                downloadAllPages(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url)
+            }
+        }
+    };
+    http.open("GET", url, true);
+    http.send();
 }
 
 function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress) {
