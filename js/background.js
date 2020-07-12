@@ -26,6 +26,7 @@ function setIcon(url) {
 var progressFunction;
 var doujinshiName;
 var currProgress = 100;
+let names = [];
 
 function updateProgress(progress) {
     progressFunction = progress;
@@ -76,6 +77,14 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
                     } else {
                         title = "NHentai " + key
                     }
+                    let c = 2;
+                    let tmp = title;
+                    while (names.includes(tmp)) {
+                        tmp = title + " (" + c + ")";
+                        c++;
+                    }
+                    title = tmp;
+                    names.push(title);
                     zip.folder(cleanName(title));
                     download(json, cleanName(title), errorCb, progress, allDoujinshis[key], zip, length === i + 1, i + 1, length, path, function() {
                         downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i + 1, allKeys, callbackEnd);
@@ -147,6 +156,7 @@ function downloadAllPagesInternal(allDoujinshis, curr, max, path, errorCb, progr
 
 function downloadAllDoujinshis(allDoujinshis, path, errorCb, progress, callbackEnd = null) {
     let zip = new JSZip();
+    names = [];
     let length = Object.keys(allDoujinshis).length;
     downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, 0, Object.keys(allDoujinshis), callbackEnd);
 }
