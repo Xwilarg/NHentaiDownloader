@@ -92,7 +92,6 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
 }
 
 function downloadAllPages(allDoujinshis, curr, max, path, errorCb, progress, url) {
-    console.log(allDoujinshis);
     downloadAllDoujinshis(allDoujinshis, path + " (" + curr + ")", errorCb, progress, function() {
         downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url);
     });
@@ -117,26 +116,26 @@ function downloadAllPagesInternal(allDoujinshis, curr, max, path, errorCb, progr
         if (this.readyState === 4) {
             if (this.status === 200) {
                 allDoujinshis = {};
-                let allIds = [];
                 let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)((<br>)+<input [^>]+>[^<]+<br>[^<]+<br>[^<]+)?<\/div>/g
                 let match;
-                let pageHtml =  this.responseText;
-                do {
-                    match = matchs.exec(pageHtml);
-                    if (match !== null) {
-                        allIds.push(match[1]);
-                    }
-                } while (match);
-                /*let allDoujinshis = {};
-                allIds.forEach(function(id) {
-                    elem = document.getElementById(id);
-                    if (elem.checked) {
-                        allDoujinshis[id] = elem.name;
-                    }
-                });*/
-                /*downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url, function() {
-                    downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url);
-                });*/
+                let pageHtml =  this.responseText.replace(/<\/a>/g, '\n');
+                chrome.storage.sync.get({
+                    displayName: "pretty"
+                }, function(elems) {
+                    do {
+                        match = matchs.exec(pageHtml);
+                        if (match !== null) {
+                            let tmpName;
+                            if (elems.displayName === "pretty") {
+                                tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
+                            } else {
+                                tmpName = match[2].trim();
+                            }
+                            allDoujinshis[match[1]] = tmpName;
+                        }
+                    } while (match);
+                    downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url, callbackEnd);
+                });
             }
         }
     };
