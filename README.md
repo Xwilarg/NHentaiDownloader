@@ -14,7 +14,12 @@ You can either go on a doujinshi page to download it, or go to a page containing
 ![Overview](Preview/Overview.png)<br/>
 ![Folder](Preview/Folder.png)
 
-## Download many doujinshi at a time!
+## Download many doujinshi at a time
 
 ![Overview](Preview/Overview-many.png)<br/>
 ![Folder](Preview/Folder-many.png)
+
+## Download many pages at a time
+
+![Overview](Preview/Overview-pages.png)<br/>
+![Folder](Preview/Folder-pages.png)
