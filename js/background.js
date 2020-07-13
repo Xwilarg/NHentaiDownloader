@@ -100,15 +100,33 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
     http.send();
 }
 
-function downloadAllPages(allDoujinshis, curr, max, path, errorCb, progress, url) {
-    downloadAllDoujinshis(allDoujinshis, path + " (" + curr + ")", errorCb, progress, function() {
-        downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url);
-    });
+var max;
+var curr;
+var basePath;
+var tranAllDoujinshis;
+var tranErrorCb;
+var tranProgress;
+var tranUrl;
+function downloadAllPages(allDoujinshis, currTmp, maxTmp, path, errorCb, progress, url) {
+    max = maxTmp;
+    curr = currTmp;
+    basePath = path;
+    // There is probably a better way to do that
+    tranAllDoujinshis = allDoujinshis;
+    tranErrorCb = errorCb;
+    tranProgress = progress;
+    tranUrl = url;
+    downloadAllDoujinshis(allDoujinshis, basePath, errorCb, progress, downloadAllPagesTransition);
 }
 
-function downloadAllPagesInternal(allDoujinshis, curr, max, path, errorCb, progress, url, callbackEnd) {
+function downloadAllPagesTransition() {
+    downloadAllPagesInternal(tranAllDoujinshis, basePath, tranErrorCb, tranProgress, tranUrl, downloadAllPagesTransition);
+}
+
+function downloadAllPagesInternal(allDoujinshis, path, errorCb, progress, url, callbackEnd) {
     max--;
     curr++;
+    console.log(max);
     if (max == 0) { // We are done parsing everything
         return;
     }
@@ -143,9 +161,7 @@ function downloadAllPagesInternal(allDoujinshis, curr, max, path, errorCb, progr
                             allDoujinshis[match[1]] = tmpName;
                         }
                     } while (match);
-                    downloadAllDoujinshis(allDoujinshis, path + " (" + curr + ")", errorCb, progress, function() {
-                        downloadAllPagesInternal(allDoujinshis, curr, max, path + " (" + curr + ")", errorCb, progress, url);
-                    });
+                    downloadAllDoujinshis(allDoujinshis, path + " (" + curr + ")", errorCb, progress, callbackEnd);
                 });
             }
         }
