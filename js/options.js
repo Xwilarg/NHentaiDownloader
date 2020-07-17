@@ -1,7 +1,8 @@
 chrome.storage.sync.get({
     useZip: "zip",
     displayName: "pretty",
-    displayCheckbox: true
+    displayCheckbox: true,
+    duplicateBehaviour: "rename"
 }, function(elems) {
     let select = document.getElementById('useZip');
     for (var i, j = 0; i = select.options[j]; j++) {
@@ -19,6 +20,14 @@ chrome.storage.sync.get({
     }
 
     displayCheckbox.checked = elems.displayCheckbox;
+
+    select = document.getElementById('duplicateBehaviour');
+    for (var i, j = 0; i = select.options[j]; j++) {
+        if (i.value == elems.duplicateBehaviour) {
+            select.selectedIndex = j;
+            break;
+        }
+    }
 });
 
 useZip.addEventListener('change', function() {
@@ -36,5 +45,11 @@ displayName.addEventListener('change', function() {
 displayCheckbox.addEventListener('change', function() {
     chrome.storage.sync.set({
         displayCheckbox: this.checked
+    });
+})
+
+duplicateBehaviour.addEventListener('change', function() {
+    chrome.storage.sync.set({
+        duplicateBehaviour: this.options[this.selectedIndex].value
     });
 })
