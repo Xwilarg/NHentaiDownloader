@@ -1,6 +1,14 @@
 html {
     width: max-content;
+}
+
+#htmlLight {
     color: #202a34;
+}
+
+#htmlDark {
+    color: white;
+    background-color: #202a34;
 }
 
 #button, #buttonBack, #buttonAll {

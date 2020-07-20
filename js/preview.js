@@ -259,6 +259,13 @@ function updatePreview(url) {
 }
 
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.storage.sync.get({
+        darkMode: false
+    }, function(elemsLocal) {
+        if (elemsLocal.darkMode) {
+            document.getElementById('htmlLight').id = 'htmlDark';
+        }
+    });
     currUrl = tabs[0].url;
     chrome.storage.local.get({
         lastUrl: ""
