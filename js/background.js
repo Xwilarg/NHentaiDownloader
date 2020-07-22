@@ -103,15 +103,15 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
     http.send();
 }
 
-var max;
+var pagesArr;
 var curr;
 var basePath;
 var tranAllDoujinshis;
 var tranErrorCb;
 var tranProgress;
 var tranUrl;
-function downloadAllPages(allDoujinshis, currTmp, maxTmp, path, errorCb, progress, url) {
-    max = maxTmp;
+function downloadAllPages(allDoujinshis, currTmp, pagesArrTmp, path, errorCb, progress, url) {
+    pagesArr = pagesArrTmp;
     curr = currTmp;
     basePath = path;
     // There is probably a better way to do that
@@ -119,7 +119,12 @@ function downloadAllPages(allDoujinshis, currTmp, maxTmp, path, errorCb, progres
     tranErrorCb = errorCb;
     tranProgress = progress;
     tranUrl = url;
-    downloadAllDoujinshis(allDoujinshis, basePath, errorCb, progress, downloadAllPagesTransition);
+    if (pagesArr.includes(curr)) {
+        pagesArr.splice(pagesArr.indexOf(curr), 1);
+        downloadAllDoujinshis(allDoujinshis, basePath + " (" + curr + ")" , errorCb, progress, downloadAllPagesTransition);
+    } else {
+        downloadAllPagesTransition();
+    }
 }
 
 function downloadAllPagesTransition() {
@@ -127,12 +132,11 @@ function downloadAllPagesTransition() {
 }
 
 function downloadAllPagesInternal(allDoujinshis, path, errorCb, progress, url, callbackEnd) {
-    max--;
-    curr++;
-    console.log(max);
-    if (max == 0) { // We are done parsing everything
+    if (pagesArr.length == 0) { // We are done parsing everything
         return;
     }
+    curr = pagesArr[0];
+    pagesArr.splice(0, 1);
     let m = /page=([0-9]+)/.exec(url)
     if (m !== null) {
         url = url.replace(m[0], "page=" + curr);

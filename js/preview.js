@@ -86,6 +86,56 @@ function SaveIdInLocalStorage(id, allIds, checked) {
     return allIds;
 }
 
+let isError = null;
+
+function parseDownloadAll(maxPage) {
+    let pages = []
+    let pageText = document.getElementById('downloadInput').value;
+    pageText.split(',').forEach(function(e) {
+        let elem = e.trim();
+        let dash = elem.split('-');
+        if (dash.length > 1) { // There is a dash in the number (ex: 1-5)
+            let lower = dash[0].trim();
+            let upper = dash[1].trim();
+            let lowerNb = parseInt(lower);
+            let upperNb = parseInt(upper);
+            if (lower !== '' + lowerNb || upper !== '' + upperNb) {
+                isError = "Invalid page syntax, each number must be separated by a comma ',' or a dash '-'";
+                pages = [];
+                return;
+            }
+            if (lowerNb < 0 || upperNb < 0 || lowerNb > maxPage || upperNb > maxPage) {
+                isError = "Page number must be between 0 and " + maxPage;
+                pages = [];
+                return;
+            }
+            if (upperNb <= lowerNb) {
+                isError = "Upper limit must be strictly bigger than lower limit"
+                pages = [];
+                return;
+            }
+            if (!pages.includes(lowerNb)) pages.push(lowerNb);
+            if (!pages.includes(upperNb)) pages.push(upperNb);
+        }
+        else
+        {
+            let pageNb = parseInt(elem);
+            if (elem !== '' + pageNb) {
+                isError = "Invalid page syntax, each number must be separated by a comma ',' or a dash '-'";
+                pages = [];
+                return;
+            }
+            if (pageNb < 0 || pageNb > maxPage) {
+                isError = "Page number must be between 0 and " + maxPage;
+                pages = [];
+                return;
+            }
+            if (!pages.includes(pageNb)) pages.push(pageNb);
+        }
+    });
+    return pages;
+}
+
 // Display popup for many doujinshis
 chrome.runtime.onMessage.addListener(function(request, _) {
     if (request.action == "getHtml") {
@@ -128,7 +178,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             }
             let parts = currUrl.split('/')
             let name;
-            if (parts[parts.length - 1] === "") name = parts[parts.length - 2];
+            if (parts[parts.length - 1] === "" || parts[parts.length - 1].startsWith("?page=")) name = parts[parts.length - 2];
             else name = parts[parts.length - 1];
             name = name.replace("q=", "");
             let extension = "";
@@ -138,17 +188,26 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                 extension = ".cbz";
             let nbDownload = 0;
             let currPage = 0;
+            let maxPage = 0;
             let html =  '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
             + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><br/><input type="button" id="button" value="Download"/>';
             let lastMatch = /page=([0-9]+)" class="last">/.exec(pageHtml) // Get the number of pages
             if (lastMatch !== null) {
                 currPage = parseInt(/page=([0-9]+)" class="page current">/.exec(pageHtml)[1]);
-                nbDownload = parseInt(lastMatch[1]) - currPage + 1;
-                html += '<br/><input type="button" id="buttonAll" value="Download all (' + nbDownload + ' pages)"/>';
+                maxPage = parseInt(lastMatch[1]);
+                nbDownload = maxPage - currPage + 1;
+                html += '<br/><input type="button" id="buttonAll" value="Download all (' + nbDownload + ' pages)"/><br/><input type="text" id="downloadInput"/><input type="button" id="buttonHelp" value="?"/>';
             }
             html += '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
             document.getElementById('action').innerHTML = html;
             document.getElementById('path').value = cleanName(name);
+            if (lastMatch !== null) {
+                document.getElementById('downloadInput').value = currPage + "-" + maxPage;
+                document.getElementById('buttonHelp').addEventListener('click', function() {
+                    alert("Input the pages you want to download for the \"Download all\" feature\nWrite your pages separated by comma ',', you can also write range of number by separating them by a dash '-'\n"
+                    + "Example: 2,4,6-10 will download the pages 2, 4 and 6 to 10 (included)");
+                });
+            }
             document.getElementById('invert').addEventListener('click', function()
             {
                 let storageAllIds;
@@ -202,6 +261,12 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                 }
             });
             if (nbDownload > 0) {
+                document.getElementById('downloadInput').addEventListener('change', function() {
+                    let pages = parseDownloadAll(maxPage);
+                    if (pages.length !== 0) {
+                        document.getElementById("buttonAll").value = 'Download all (' + pages.length + ' pages)';
+                    }
+                });
                 document.getElementById('buttonAll').addEventListener('click', function()
                 {
                     let allDoujinshis = {};
@@ -209,13 +274,19 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                         elem = document.getElementById(id);
                         allDoujinshis[id] = elem.name;
                     });
-                    let choice = confirm("You are going to download " + nbDownload + " pages of doujinshi, starting at page " + currPage + ". Are you sure you want to continue?");
-                    if (choice) {
-                        let finalName = document.getElementById('path').value;
-                        chrome.extension.getBackgroundPage().downloadAllPages(allDoujinshis, currPage, nbDownload, finalName, function(error) {
-                            document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
-                        }, updateProgress, currUrl);
-                        updateProgress(0, finalName, false);
+                    let pages = parseDownloadAll(maxPage);
+                    if (isError) {
+                        alert(isError);
+                        document.getElementById('downloadInput').value = currPage + "-" + nbDownload;
+                    } else {
+                        let choice = confirm("You are going to download " + pages.length + " pages of doujinshi. Are you sure you want to continue?");
+                        if (choice) {
+                            let finalName = document.getElementById('path').value;
+                            chrome.extension.getBackgroundPage().downloadAllPages(allDoujinshis, currPage, pages, finalName, function(error) {
+                                document.getElementById('action').innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
+                            }, updateProgress, currUrl);
+                            updateProgress(0, finalName, false);
+                        }
                     }
                 });
             }

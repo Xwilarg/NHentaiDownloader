@@ -11,7 +11,13 @@ html {
     background-color: #202a34;
 }
 
-#button, #buttonBack, #buttonAll {
+#downloadInput, #buttonHelp  {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#button, #buttonBack, #buttonAll{
     display: block;
     margin-left: auto;
     margin-right: auto;
