@@ -114,8 +114,9 @@ function parseDownloadAll(maxPage) {
                 pages = [];
                 return;
             }
-            if (!pages.includes(lowerNb)) pages.push(lowerNb);
-            if (!pages.includes(upperNb)) pages.push(upperNb);
+            for (let i = lowerNb; i <= upperNb; i++) {
+                if (!pages.includes(i)) pages.push(i);
+            }
         }
         else
         {
