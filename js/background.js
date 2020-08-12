@@ -67,7 +67,7 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
                 }, function(elems) {
                     let title = getDownloadName(elems.downloadName, json.title.pretty === "" ?
                         json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '') : json.title.pretty,
-                        json.title.english, json.title.japanese, key);
+                        json.title.english, json.title.japanese, key, json.tags);
                     if (elems.duplicateBehaviour == "remove") {
                         let c = 2;
                         let tmp = title;

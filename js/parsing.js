@@ -33,11 +33,25 @@ function cleanName(name, replaceSpaces) {
     return cleanName;
 }
 
-function getDownloadName(exampleString, prettyName, englishName, japaneseName, id) {
+function getDownloadName(exampleString, prettyName, englishName, japaneseName, id, tags) {
     console.log(prettyName);
     exampleString = exampleString.replace(/{pretty}/g, prettyName);
     exampleString = exampleString.replace(/{english}/g, englishName);
     exampleString = exampleString.replace(/{japanese}/g, japaneseName);
     exampleString = exampleString.replace(/{id}/g, id);
+    let language = "";
+    let artists = [];
+    let groups = [];
+    let characters = [];
+    tags.forEach(function(e) {
+        if (e.type === "group") groups.push(e.name);
+        else if (e.type === "character") characters.push(e.name);
+        else if (e.type === "artist") artists.push(e.name);
+        else if (e.type === "language" && e.name !== "translated") language = e.name;
+    });
+    exampleString = exampleString.replace(/{group}/g, groups.join(", "));
+    exampleString = exampleString.replace(/{character}/g, characters.join(", "));
+    exampleString = exampleString.replace(/{artist}/g, artists.join(", "));
+    exampleString = exampleString.replace(/{language}/g, language);
     return exampleString;
 }
