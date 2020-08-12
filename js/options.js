@@ -1,9 +1,10 @@
 chrome.storage.sync.get({
     useZip: "zip",
-    displayName: "pretty",
+    downloadName: "{pretty}",
     displayCheckbox: true,
     duplicateBehaviour: "rename",
-    darkMode: false
+    darkMode: false,
+    replaceSpaces: true
 }, function(elems) {
     let select = document.getElementById('useZip');
     for (var i, j = 0; i = select.options[j]; j++) {
@@ -12,13 +13,9 @@ chrome.storage.sync.get({
             break;
         }
     }
-    select = document.getElementById('displayName');
-    for (var i, j = 0; i = select.options[j]; j++) {
-        if (i.value == elems.displayName) {
-            select.selectedIndex = j;
-            break;
-        }
-    }
+    replaceSpaces.checked = elems.replaceSpaces;
+
+    downloadName.value = elems.downloadName;
 
     displayCheckbox.checked = elems.displayCheckbox;
 
@@ -39,9 +36,17 @@ useZip.addEventListener('change', function() {
     });
 });
 
-displayName.addEventListener('change', function() {
+downloadName.addEventListener('change', function() {
+    if (this.value.trim().length !== 0) {
+        chrome.storage.sync.set({
+            downloadName: this.value
+        });
+    }
+});
+
+replaceSpaces.addEventListener('change', function() {
     chrome.storage.sync.set({
-        displayName: this.options[this.selectedIndex].value
+        replaceSpaces: this.checked
     });
 });
 

@@ -8,14 +8,6 @@
             <option value="raw">Raw (not recommanded)</option>
         </select>
         <br/>
-        Title format:
-        <select id="displayName">
-            <option value="pretty">Pretty Name</option>
-            <option value="english">English Name</option>
-            <option value="japanese">Japanese Name</option>
-            <option value="sauce">Sauce</option>
-        </select>
-        <br/>
         Display checkboxs on NHentai:
         <input id="displayCheckbox" type="checkbox"/>
         <br/>
@@ -27,6 +19,17 @@
         <br/>
         Dark mode:
         <input id="darkMode" type="checkbox"/>
+        <br/><hr/><br/>
+        Name template:
+        <input id="downloadName" type="text"/>
+        <br/><br/>
+        <b>Template explanations:</b><br/>
+        <b>{pretty}:</b> Pretty title<br/>
+        <b>{japanese}:</b> Japanese title<br/>
+        <b>{english}:</b> English title<br/>
+        <b>{id}:</b> 6 digits ID<br/>
+        Replace spaces by underscores:
+        <input id="replaceSpaces" type="checkbox"/>
     </body>
     <script src="js/options.js"></script>
 </html>

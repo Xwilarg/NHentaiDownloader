@@ -18,15 +18,26 @@ var ParsingHtml =
     }
 };
 
-function cleanName(name) {
+function cleanName(name, replaceSpaces) {
     let cleanName = "";
     name.split('').forEach (function(e) {
-        if (e === ' ')
+        if (e === ' ' && replaceSpaces)
             cleanName += '_';
         else if (e !== '/' && e !== '\\' && e !== '?' && e !== '%' && e !== '*' && e !== ':'
             && e !== '|' && e !== '"' && e != '<' && e != '>' && e !== '.')
             cleanName += e;
     });
-    cleanName = cleanName.replace(/_+/g, '_');
+    if (replaceSpaces) {
+        cleanName = cleanName.replace(/_+/g, '_');
+    }
     return cleanName;
+}
+
+function getDownloadName(exampleString, prettyName, englishName, japaneseName, id) {
+    console.log(prettyName);
+    exampleString = exampleString.replace(/{pretty}/g, prettyName);
+    exampleString = exampleString.replace(/{english}/g, englishName);
+    exampleString = exampleString.replace(/{japanese}/g, japaneseName);
+    exampleString = exampleString.replace(/{id}/g, id);
+    return exampleString;
 }

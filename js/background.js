@@ -61,23 +61,13 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
             if (this.status === 200) {
                 let json = JSON.parse(Parsing.GetJson(this.responseText));
                 chrome.storage.sync.get({
-                    displayName: "pretty",
-                    duplicateBehaviour: "remove"
+                    downloadName: "{pretty}",
+                    duplicateBehaviour: "remove",
+                    replaceSpaces: true
                 }, function(elems) {
-                    let title;
-                    if (elems.displayName === "pretty") {
-                        if (json.title.pretty === "") {
-                            title = json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '');
-                        } else {
-                            title = json.title.pretty;
-                        }
-                    } else if (elems.displayName === "english") {
-                        title = json.title.english;
-                    } else if (elems.displayName === "japanese") {
-                        title = json.title.japanese;
-                    } else {
-                        title = "NHentai " + key
-                    }
+                    let title = getDownloadName(elems.downloadName, json.title.pretty === "" ?
+                        json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '') : json.title.pretty,
+                        json.title.english, json.title.japanese, key);
                     if (elems.duplicateBehaviour == "remove") {
                         let c = 2;
                         let tmp = title;
@@ -88,8 +78,8 @@ function downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, pr
                         title = tmp;
                         names.push(title);
                     }
-                    zip.folder(cleanName(title));
-                    download(json, cleanName(title), errorCb, progress, allDoujinshis[key], zip, length === i + 1, i + 1, length, path, function() {
+                    zip.folder(cleanName(title, elems.replaceSpaces));
+                    download(json, cleanName(title, elems.replaceSpaces), errorCb, progress, allDoujinshis[key], zip, length === i + 1, i + 1, length, path, function() {
                         downloadDoujinshiInternal(zip, length, allDoujinshis, path, errorCb, progress, i + 1, allKeys, callbackEnd);
                     }, callbackEnd);
                 });
@@ -154,13 +144,13 @@ function downloadAllPagesInternal(allDoujinshis, path, errorCb, progress, url, c
                 let match;
                 let pageHtml =  this.responseText.replace(/<\/a>/g, '\n');
                 chrome.storage.sync.get({
-                    displayName: "pretty"
+                    downloadName: "{pretty}"
                 }, function(elems) {
                     do {
                         match = matchs.exec(pageHtml);
                         if (match !== null) {
                             let tmpName;
-                            if (elems.displayName === "pretty") {
+                            if (elems.downloadName === "{pretty}") {
                                 tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
                             } else {
                                 tmpName = match[2].trim();

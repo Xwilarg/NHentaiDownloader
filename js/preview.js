@@ -31,30 +31,20 @@ function doujinshiPreview(id) {
                 let json = JSON.parse(Parsing.GetJson(this.responseText));
                 chrome.storage.sync.get({
                     useZip: "zip",
-                    displayName: "pretty"
+                    downloadName: "{pretty}",
+                    replaceSpaces: true
                 }, function(elems) {
                     let extension = "";
                     if (elems.useZip == "zip")
                         extension = ".zip";
                     else if (elems.useZip == "cbz")
                         extension = ".cbz";
-                    let title;
-                    if (elems.displayName === "pretty") {
-                        if (json.title.pretty === "") {
-                            title = json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '');
-                        } else {
-                            title = json.title.pretty;
-                        }
-                    } else if (elems.displayName === "english") {
-                        title = json.title.english;
-                    } else if (elems.displayName === "japanese") {
-                        title = json.title.japanese;
-                    } else {
-                        title = "NHentai " + id
-                    }
+                    let title = getDownloadName(elems.downloadName, json.title.pretty === "" ?
+                            json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '') : json.title.pretty,
+                        json.title.english, json.title.japanese, id);
                     document.getElementById('action').innerHTML = '<h3 id="center">' + title + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
                     '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
-                    document.getElementById('path').value = cleanName(title);
+                    document.getElementById('path').value = cleanName(title, elems.replaceSpaces);
                     document.getElementById('button').addEventListener('click', function()
                     {
                         chrome.extension.getBackgroundPage().downloadDoujinshi(json, document.getElementById('path').value, function(error) {
@@ -142,7 +132,8 @@ chrome.runtime.onMessage.addListener(function(request, _) {
     if (request.action == "getHtml") {
         chrome.storage.sync.get({
             useZip: "zip",
-            displayName: "pretty"
+            downloadName: "{pretty}",
+            replaceSpaces: true
         }, function(elems) {
             let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)((<br>)+<input [^>]+>[^<]+<br>[^<]+<br>[^<]+)?<\/div>/g
             let match;
@@ -163,7 +154,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
                         }
                     }
                     let tmpName;
-                    if (elems.displayName === "pretty") {
+                    if (elems.downloadName === "{pretty}") {
                         tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
                     } else {
                         tmpName = match[2].trim();
@@ -201,7 +192,7 @@ chrome.runtime.onMessage.addListener(function(request, _) {
             }
             html += '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
             document.getElementById('action').innerHTML = html;
-            document.getElementById('path').value = cleanName(name);
+            document.getElementById('path').value = cleanName(name, elems.replaceSpaces);
             if (lastMatch !== null) {
                 document.getElementById('downloadInput').value = currPage + "-" + maxPage;
                 document.getElementById('buttonHelp').addEventListener('click', function() {
