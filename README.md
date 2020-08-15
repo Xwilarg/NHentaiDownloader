@@ -1,7 +1,7 @@
 # NHentaiDownloader
 A chrome extension to download doujinshi from NHentai
 
-### Please make note that the Chrome Store now reject any update I'm trying to do, if you decide to download it from here you'll be stuck with the version 1.7.1.
+### Please make note that the Chrome Store now reject any update I'm trying to do, if you decide to download it from there you'll be stuck with the version 1.7.1.
 ### For the most recent version, you can download it from the [release page](https://github.com/Xwilarg/NHentaiDownloader/releases)
 
 NHentai only allow to download doujinshi in .torrent format so I created this extension allowing to download them either in ZIP, CBZ or raw format.<br/>
