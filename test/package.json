@@ -24,6 +24,6 @@
   "homepage": "https://github.com/Xwilarg/NHentaiDownloader#readme",
   "dependencies": {
     "mocha": "^7.2.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.1"
   }
 }
