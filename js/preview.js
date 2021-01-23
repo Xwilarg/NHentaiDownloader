@@ -43,7 +43,7 @@ function doujinshiPreview(id) {
                             json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '') : json.title.pretty,
                         json.title.english, json.title.japanese, id, json.tags);
                     document.getElementById('action').innerHTML = '<h3 id="center">' + title + '</h3><div id="center">(' + json.images.pages.length + ' pages)' +
-                    '</div><br/><input type="button" id="button" value="Download"/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+                    '</div><br/><input type="button" id="button" value="Download" autofocus/><br/><br/>Downloads/<input type="text" id="path"/>' + extension;
                     document.getElementById('path').value = cleanName(title, elems.replaceSpaces);
                     document.getElementById('button').addEventListener('click', function()
                     {
