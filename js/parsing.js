@@ -34,7 +34,6 @@ function cleanName(name, replaceSpaces) {
 }
 
 function getDownloadName(exampleString, prettyName, englishName, japaneseName, id, tags) {
-    console.log(prettyName);
     exampleString = exampleString.replace(/{pretty}/g, prettyName);
     exampleString = exampleString.replace(/{english}/g, englishName);
     exampleString = exampleString.replace(/{japanese}/g, japaneseName);
