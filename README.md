@@ -9,11 +9,18 @@ You can either go on a doujinshi page to download it, or go to a page containing
 
 ## How to install the extension from Release page
 
+### Chrome
 - First latest version of the extension on the [release page](https://github.com/Xwilarg/NHentaiDownloader/releases) (don't download the source code, you only need NHentaiDownloader.zip), unzip it somewhere in your computer
-- Go on chrome://extensions/
+- Write chrome://extensions/ in your address bar
 - Enable the developer mode (top right corner of the page)
 - Press the "Load Unpacked" button (top left corner of the page)
 - Go inside the folder of the extension and press "Select a folder"
+
+### Firefox
+- First latest version of the extension on the [release page](https://github.com/Xwilarg/NHentaiDownloader/releases) (don't download the source code, you only need NHentaiDownloader.zip), unzip it somewhere in your computer
+- Write about:debugging#/runtime/this-firefox in your address bar
+- Press the "Load Temporary Add-on" button
+- Go inside the folder of the extension and select "manifest_firefox.json"
 
 ## A quick note about the Chrome store
 
