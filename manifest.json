@@ -17,7 +17,7 @@
   ],
   "author": "Xwilarg",
   "background": {
-    "scripts": ["js/jszip/dist/jszip.min.js", "js/FileSaver.js/dist/FileSaver.min.js", "js/parsing.js", "js/background.js"]
+    "scripts": ["js/background.js"]
   },
   "options_ui": {
     "page": "options.html",
