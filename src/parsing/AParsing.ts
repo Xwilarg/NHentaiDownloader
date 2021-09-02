@@ -1,4 +1,4 @@
 export default abstract class AParsing {
-    abstract GetUrl(id: number): string;
-    abstract GetJson(response: string): string;
+    abstract GetUrl(id: string): string;
+    abstract GetJsonAsync(response: Response): Promise<any>;
 }
