@@ -3,6 +3,22 @@ import Background from "../background/background";
 import * as utils from "../utils";
 import * as message from "./message"
 
+let currUrl: string;
+let currParsing: AParsing
+
+export async function updatePreview(url: string, parsing: AParsing) {
+    currParsing = parsing;
+    currUrl = url;
+    let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(url)
+    if (match !== null) {
+        await doujinshiPreviewAsync(match[1], parsing);
+    } else if (url.startsWith("https://nhentai.net")) {
+        // TODO
+    } else {
+        document.getElementById('action')!.innerHTML = message.invalidPage();
+    }
+}
+
 // Update progress bar on the preview popup
 export function updateProgress(progress: number, doujinshiName: string, isZipping: boolean) {
     if (isZipping && progress == -1) { // File is being downloaded
@@ -14,7 +30,7 @@ export function updateProgress(progress: number, doujinshiName: string, isZippin
     document.getElementById('buttonBack')!.addEventListener('click', function()
     {
         ((chrome.extension.getBackgroundPage() as unknown) as Background).goBack();
-        updatePreview(currUrl);
+        updatePreview(currUrl, currParsing);
     });
 }
 
