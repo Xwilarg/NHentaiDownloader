@@ -1,5 +1,4 @@
 import AParsing from "../parsing/AParsing";
-import Background from "../background/background";
 import * as utils from "../utils";
 import * as message from "./message"
 
@@ -22,7 +21,7 @@ export default class Popup
     }
 
     // Update progress bar on the preview popup
-    #updateProgress(progress: number, doujinshiName: string, isZipping: boolean) {
+    updateProgress(progress: number, doujinshiName: string, isZipping: boolean) {
         if (isZipping && progress == -1) { // File is being downloaded
             document.getElementById('action')!.innerHTML = message.downloadDone();
         } else { // Download done
@@ -33,7 +32,7 @@ export default class Popup
         let url = this.#url;
         document.getElementById('buttonBack')!.addEventListener('click', function()
         {
-            ((chrome.extension.getBackgroundPage() as unknown) as Background).goBack();
+            (chrome.extension.getBackgroundPage() as any).goBack();
             updatePreview(url);
         });
     }
@@ -64,10 +63,10 @@ export default class Popup
                 document.getElementById('action')!.innerHTML = message.downloadInfo(title, json.images.pages.length, extension);
                 (document.getElementById('path') as HTMLInputElement).value = utils.cleanName(title, elems.replaceSpaces);
 
-                let updateProgress = this.#updateProgress;
+                let updateProgress = this.updateProgress;
                 document.getElementById('button')!.addEventListener('click', function()
                 {
-                    ((chrome.extension.getBackgroundPage() as unknown) as Background).downloadDoujinshi(json, (document.getElementById('path') as HTMLInputElement).value, function(error: string) {
+                    (chrome.extension.getBackgroundPage() as any).downloadDoujinshi(json, (document.getElementById('path') as HTMLInputElement).value, function(error: string) {
                         document.getElementById('action')!.innerHTML = message.errorDownload(error);
                     }, updateProgress, title);
                         updateProgress(0, title, false);

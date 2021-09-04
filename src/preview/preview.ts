@@ -22,8 +22,8 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             });
         }
     });
-    if (!chrome.extension.getBackgroundPage().isDownloadFinished()) {
-        chrome.extension.getBackgroundPage().updateProgress(updateProgress);
+    if (!(chrome.extension.getBackgroundPage() as any).isDownloadFinished()) {
+        (chrome.extension.getBackgroundPage() as any).updateProgress(popup.updateProgress);
         return;
     }
     popup.updatePreview(currUrl);
