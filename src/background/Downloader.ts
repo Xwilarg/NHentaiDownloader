@@ -68,6 +68,9 @@ export default class Downloader
                         self.progressCallback(100, null, true); // Notify popup that we are done
                     } catch (e) { } // Dead object
                 });
+            } else {
+                this.currentProgress = 100;
+                this.progressCallback(100, null, true); // Notify popup that we are done
             }
         }
         catch (error)
