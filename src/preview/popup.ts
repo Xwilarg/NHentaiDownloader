@@ -46,6 +46,7 @@ export default class Popup
             document.getElementById('action')!.innerHTML = message.errorOther(resp.status, resp.statusText);
         } else {
             let json = await this.#parsing.GetJsonAsync(resp);
+            let self = this;
             chrome.storage.sync.get({
                 useZip: "zip",
                 downloadName: "{pretty}",
@@ -63,7 +64,6 @@ export default class Popup
                 document.getElementById('action')!.innerHTML = message.downloadInfo(title, json.images.pages.length, extension);
                 (document.getElementById('path') as HTMLInputElement).value = utils.cleanName(title, elems.replaceSpaces);
 
-                let self = this;
                 document.getElementById('button')!.addEventListener('click', function()
                 {
                     (chrome.extension.getBackgroundPage() as any).downloadDoujinshi(json, (document.getElementById('path') as HTMLInputElement).value, function(error: string) {
