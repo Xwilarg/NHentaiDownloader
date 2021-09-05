@@ -70,12 +70,15 @@ export default class Downloader
             const resp = await fetch('https://i.nhentai.net/galleries/' + this.#mediaId + '/' + filenameParsing);
             if (resp.ok)
             {
-                let reader = new FileReader();
-                let self = this;
-                reader.addEventListener("loadend", function() {
-                    self.#zip.file(self.#path + '/' + filename, reader.result as null);
+                let blob = await resp.blob();
+                await new Promise((resolve, reject) => {
+                    var reader = new FileReader();
+                    reader.onload = () => {
+                        resolve(this.#zip.file(this.#path + '/' + filename, reader.result as null));
+                    };
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(blob);
                 });
-                reader.readAsArrayBuffer(await resp.blob());
             }
             else
             {
