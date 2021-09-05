@@ -22,18 +22,24 @@ export default class Downloader
         }
 
         this.#mediaId = this.#json.media_id;
+
+        let self = this;
         chrome.storage.sync.get({
             useZip: "zip"
         }, function(elems) {
-            this.#useZip = elems.useZip;
-            if (this.#useZip === "raw") {
-                this.#currentProgress = 100;
-                try {
-                    this.#progressCallback(100, this.#doujinshiName, false);
-                } catch (e) { } // Dead object
-            }
-            this.#download();
+            self.#init(elems.useZip);
         });
+    }
+
+    #init(useZip: string) {
+        this.#useZip = useZip;
+        if (this.#useZip === "raw") {
+            this.#currentProgress = 100;
+            try {
+                this.#progressCallback(100, this.#doujinshiName, false);
+            } catch (e) { } // Dead object
+        }
+        this.#download();
     }
 
     async #download() {
