@@ -4,6 +4,7 @@
       "noEmitOnError": true,
       "strictNullChecks": true,
       "removeComments": true,
-      "target": "es6"
+      "target": "es6",
+      "moduleResolution": "node"
     }
 }

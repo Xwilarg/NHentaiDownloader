@@ -1,4 +1,5 @@
-import * as JSZip from "../../node_modules/jszip/index";
+var JSZip = require("jszip");
+var fileSaver = require("file-saver");
 
 export default class Downloader
 {
@@ -41,6 +42,26 @@ export default class Downloader
             for (let i = 0; i < this.#json.images.pages.length; i++)
             {
                 await this.#downloadPageInternalAsync(i);
+                this.#progressCallback((i + 1) * 50 / this.#json.images.pages.length, this.#path, false);
+            }
+            if (this.#useZip !== "raw") { // Zipping resources, raw download doesn't need that
+                this.#zip.generateAsync({type: "blob"}, function updateCallback(elem: any) {
+                    try {
+                        this.#progressCallback(50 + (elem.percent / 2), elem.currentFile == null ? this.#path : elem.currentFile, true);
+                    } catch (e) { } // Dead object
+                })
+                .then(function(content: any) {
+                    this.#currentProgress = 100;
+                    if (this.#useZip == "zip") {
+                        fileSaver.saveAs(content, this.#useZip + ".zip");
+                    }
+                    else {
+                        fileSaver.saveAs(content, this.#useZip + ".cbz");
+                    }
+                    try {
+                        this.#progressCallback(-1, null, true);
+                    } catch (e) { } // Dead object
+                });
             }
         }
         catch (error)
@@ -114,7 +135,7 @@ export default class Downloader
 
     #useZip: string; // How data must be downloaded
     #json: any; // JSON containing all data
-    #zip: JSZip; // ZIP data that will be downloaded at the end
+    #zip: typeof JSZip; // ZIP data that will be downloaded at the end
     #path: string; // Save path
     #progressCallback: Function; // Function to call when progress is made
     #errorCallback: Function; // Function to call if an error occured
