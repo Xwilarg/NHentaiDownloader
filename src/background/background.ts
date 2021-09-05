@@ -30,7 +30,13 @@ module background
     export function isDownloadFinished(): boolean {
         return currentDownloader == null || currentDownloader.isDone();
     }
+
+    export function downloadDoujinshi(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string) {
+        currentDownloader = new Downloader(jsonTmp, path, errorCallback, progressCallback, name);
+    }
 }
 
 // @ts-ignore
 window.isDownloadFinished = background.isDownloadFinished;
+// @ts-ignore
+window.downloadDoujinshi = background.downloadDoujinshi;
