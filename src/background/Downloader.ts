@@ -61,16 +61,11 @@ export default class Downloader
                         self.progressCallback(50 + (elem.percent / 2), elem.currentFile == null ? self.path : elem.currentFile, true);
                     } catch (e) { } // Dead object
                 })
-                .then(function(content: any) {
+                .then(function(content: any) { // Zipping done
                     self.currentProgress = 100;
-                    if (self.useZip == "zip") {
-                        fileSaver.saveAs(content, self.useZip + ".zip");
-                    }
-                    else {
-                        fileSaver.saveAs(content, self.useZip + ".cbz");
-                    }
+                    fileSaver.saveAs(content, self.path + "." + self.useZip);
                     try {
-                        self.progressCallback(-1, null, true);
+                        self.progressCallback(100, null, true); // Notify popup that we are done
                     } catch (e) { } // Dead object
                 });
             }
@@ -90,6 +85,7 @@ export default class Downloader
         return nb;
     }
 
+    // Download a page
     async #downloadPageInternalAsync(currPage: number, progress: number) {
         let page = this.#json.images.pages[currPage];
         let format;
