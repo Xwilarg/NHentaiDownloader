@@ -41,25 +41,6 @@ export default class Downloader
         this.#download();
     }
 
-    #zipppingUpdate(elem: any) {
-        try {
-            this.progressCallback(50 + (elem.percent / 2), elem.currentFile == null ? this.path : elem.currentFile, true);
-        } catch (e) { } // Dead object
-    }
-
-    #zippingDone(content: any) {
-        this.currentProgress = 100;
-        if (this.useZip == "zip") {
-            fileSaver.saveAs(content, this.useZip + ".zip");
-        }
-        else {
-            fileSaver.saveAs(content, this.useZip + ".cbz");
-        }
-        try {
-            this.progressCallback(-1, null, true);
-        } catch (e) { } // Dead object
-    }
-
     async #download() {
         try
         {
@@ -73,8 +54,25 @@ export default class Downloader
             // Zipping
             if (this.useZip !== "raw") { // Raw download doesn't need zipping
                 this.progressCallback(50, "in progress...", true);
-                this.#zip.generateAsync({type: "blob"}, this.#zipppingUpdate)
-                .then(this.#zippingDone);
+
+                let self = this;
+                this.#zip.generateAsync({type: "blob"}, function(elem: any) {
+                    try {
+                        self.progressCallback(50 + (elem.percent / 2), elem.currentFile == null ? self.path : elem.currentFile, true);
+                    } catch (e) { } // Dead object
+                })
+                .then(function(content: any) {
+                    self.currentProgress = 100;
+                    if (self.useZip == "zip") {
+                        fileSaver.saveAs(content, self.useZip + ".zip");
+                    }
+                    else {
+                        fileSaver.saveAs(content, self.useZip + ".cbz");
+                    }
+                    try {
+                        self.progressCallback(-1, null, true);
+                    } catch (e) { } // Dead object
+                });
             }
         }
         catch (error)
