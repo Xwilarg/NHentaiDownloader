@@ -12,7 +12,7 @@ export default class InputField implements AOption
 
     update(object: any): any {
         let value = (object as HTMLInputElement).value;
-        if (value.trim().length !== 0) {
+        if (value.trim().length === 0) {
             return null;
         }
         return (object as HTMLInputElement).value as any;
