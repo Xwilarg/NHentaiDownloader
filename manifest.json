@@ -17,7 +17,7 @@
   ],
   "author": "Xwilarg",
   "background": {
-    "scripts": ["js/background.js"]
+    "scripts": ["js/background/background.js"]
   },
   "options_ui": {
     "page": "options.html",
@@ -28,7 +28,7 @@
       "https://nhentai.net/*"
     ],
     "css" : ["css/content.css"],
-    "js": ["js/content.js"]
+    "js": ["js/content/content.js"]
   }],
   "manifest_version": 2
 }

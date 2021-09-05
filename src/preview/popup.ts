@@ -1,5 +1,5 @@
 import AParsing from "../parsing/AParsing";
-import * as utils from "../utils";
+import * as utils from "../utils/utils";
 import * as message from "./message"
 
 export default class Popup

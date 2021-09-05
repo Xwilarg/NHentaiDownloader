@@ -13,9 +13,10 @@ module.exports = {
     ]
   },
   entry: {
-    background: './src/background.ts',
-    content: './src/content.ts',
-    preview: './src/preview.ts'
+    background: './src/background/background.ts',
+    content: './src/content/content.ts',
+    preview: './src/preview/preview.ts',
+    options: './src/options/options.ts'
   },
   resolve: {
     extensions: ['.ts'],
