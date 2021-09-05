@@ -5,15 +5,14 @@ export default class Downloader
 {
     constructor(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string)
     {
-        this.#progressCallback = progressCallback;
+        this.progressCallback = progressCallback;
         this.#errorCallback = errorCallback;
-        this.#currentProgress = 0;
+        this.currentProgress = 0;
         this.#doujinshiName = name;
-        this.#path = path;
+        this.path = path;
 
         this.#zip = new JSZip();
         this.#zip.folder(path);
-        let json;
         // @ts-ignore
         if (typeof browser !== "undefined") { // Firefox
             this.#json = JSON.parse(JSON.stringify(jsonTmp));
@@ -32,14 +31,33 @@ export default class Downloader
     }
 
     #init(useZip: string) {
-        this.#useZip = useZip;
-        if (this.#useZip === "raw") {
-            this.#currentProgress = 100;
+        this.useZip = useZip;
+        if (this.useZip === "raw") {
+            this.currentProgress = 100;
             try {
-                this.#progressCallback(100, this.#doujinshiName, false);
+                this.progressCallback(100, this.#doujinshiName, false);
             } catch (e) { } // Dead object
         }
         this.#download();
+    }
+
+    #zipppingUpdate(elem: any) {
+        try {
+            this.progressCallback(50 + (elem.percent / 2), elem.currentFile == null ? this.path : elem.currentFile, true);
+        } catch (e) { } // Dead object
+    }
+
+    #zippingDone(content: any) {
+        this.currentProgress = 100;
+        if (this.useZip == "zip") {
+            fileSaver.saveAs(content, this.useZip + ".zip");
+        }
+        else {
+            fileSaver.saveAs(content, this.useZip + ".cbz");
+        }
+        try {
+            this.progressCallback(-1, null, true);
+        } catch (e) { } // Dead object
     }
 
     async #download() {
@@ -53,31 +71,15 @@ export default class Downloader
             }
 
             // Zipping
-            if (this.#useZip !== "raw") { // Raw download doesn't need zipping
-                this.#progressCallback(50, "Preparing zipping...", false);
-
-                this.#zip.generateAsync({type: "blob"}, function updateCallback(elem: any) {
-                    try {
-                        this.#progressCallback(50 + (elem.percent / 2), elem.currentFile == null ? this.#path : elem.currentFile, true);
-                    } catch (e) { } // Dead object
-                })
-                .then(function(content: any) {
-                    this.#currentProgress = 100;
-                    if (this.#useZip == "zip") {
-                        fileSaver.saveAs(content, this.#useZip + ".zip");
-                    }
-                    else {
-                        fileSaver.saveAs(content, this.#useZip + ".cbz");
-                    }
-                    try {
-                        this.#progressCallback(-1, null, true);
-                    } catch (e) { } // Dead object
-                });
+            if (this.useZip !== "raw") { // Raw download doesn't need zipping
+                this.progressCallback(50, "in progress...", true);
+                this.#zip.generateAsync({type: "blob"}, this.#zipppingUpdate)
+                .then(this.#zippingDone);
             }
         }
         catch (error)
         {
-            this.#currentProgress = 100;
+            this.currentProgress = 100;
             this.#errorCallback(error);
             throw error;
         }
@@ -108,11 +110,11 @@ export default class Downloader
                 throw "Unknown page format " + page.t;
         }
         let filenameParsing = (currPage + 1) + format; // Name for parsing
-        this.#progressCallback(progress, this.#doujinshiName + "/" + filenameParsing, false);
+        this.progressCallback(progress, this.#doujinshiName + "/" + filenameParsing, false);
 
         let filename = this.#getNumberWithZeros(currPage + 1) + format; // Final file name
 
-        if (this.#useZip !== "raw") { // ZIP (or equivalent) format
+        if (this.useZip !== "raw") { // ZIP (or equivalent) format
             const resp = await fetch('https://i.nhentai.net/galleries/' + this.#mediaId + '/' + filenameParsing);
             if (resp.ok)
             {
@@ -120,7 +122,7 @@ export default class Downloader
                 await new Promise((resolve, reject) => {
                     var reader = new FileReader();
                     reader.onload = () => {
-                        resolve(this.#zip.file(this.#path + '/' + filename, reader.result as null));
+                        resolve(this.#zip.file(this.path + '/' + filename, reader.result as null));
                     };
                     reader.onerror = reject;
                     reader.readAsArrayBuffer(blob);
@@ -133,7 +135,7 @@ export default class Downloader
         } else { // We don't need to update progress here because it go too fast anyway (since it just need to launch download)
             chrome.downloads.download({
                 url: 'https://i.nhentai.net/galleries/' + this.#mediaId + '/' + filenameParsing,
-                filename: './' + this.#path + filename
+                filename: './' + this.path + filename
             }, function(downloadId) {
                 if (downloadId === undefined) {
                     throw "Failed to download doujinshi page (" + chrome.runtime.lastError + "), if the error persist please report it.";
@@ -144,16 +146,16 @@ export default class Downloader
 
     isDone(): boolean
     {
-        return this.#currentProgress === 100;
+        return this.currentProgress === 100;
     }
 
-    #useZip: string; // How data must be downloaded
+    useZip: string; // How data must be downloaded
     #json: any; // JSON containing all data
     #zip: typeof JSZip; // ZIP data that will be downloaded at the end
-    #path: string; // Save path
-    #progressCallback: Function; // Function to call when progress is made
+    path: string; // Save path
+    progressCallback: Function; // Function to call when progress is made
     #errorCallback: Function; // Function to call if an error occured
-    #currentProgress: Number; // Current progress of the download
+    currentProgress: Number; // Current progress of the download
     #doujinshiName: string; // Name of the doujinshi
     #mediaId: number; // Id of the media
 }
