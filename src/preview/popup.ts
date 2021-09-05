@@ -63,15 +63,15 @@ export default class Popup
                 document.getElementById('action')!.innerHTML = message.downloadInfo(title, json.images.pages.length, extension);
                 (document.getElementById('path') as HTMLInputElement).value = utils.cleanName(title, elems.replaceSpaces);
 
-                let updateProgress = this.updateProgress;
+                let self = this;
                 document.getElementById('button')!.addEventListener('click', function()
                 {
                     (chrome.extension.getBackgroundPage() as any).downloadDoujinshi(json, (document.getElementById('path') as HTMLInputElement).value, function(error: string) {
                         document.getElementById('action')!.innerHTML = message.errorDownload(error);
-                    }, updateProgress, title);
-                        updateProgress(0, title, false);
-                    });
+                    }, self.updateProgress, title);
+                    self.updateProgress(0, title, false);
                 });
+            });
         }
     }
 

@@ -42,7 +42,7 @@ export default class Downloader
             for (let i = 0; i < this.#json.images.pages.length; i++)
             {
                 await this.#downloadPageInternalAsync(i);
-                this.#progressCallback((i + 1) * 50 / this.#json.images.pages.length, this.#path, false);
+                this.#progressCallback((i + 1) * 50 / this.#json.images.pages.length, this.#doujinshiName, false);
             }
             if (this.#useZip !== "raw") { // Zipping resources, raw download doesn't need that
                 this.#zip.generateAsync({type: "blob"}, function updateCallback(elem: any) {
