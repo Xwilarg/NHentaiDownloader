@@ -60,9 +60,20 @@ export default class Downloader
     async #downloadPageInternalAsync(currPage: number) {
         let page = this.#json.images.pages[currPage];
         let format;
-        if (page.t === "j") format = '.jpg';
-        else if (page.t === "p") format = '.png';
-        else format = '.gif';
+        switch (page.t)
+        {
+            case "j":
+                format = ".jpg";
+                break;
+            case "p":
+                format = ".png";
+                break;
+            case "g":
+                format = ".gif";
+                break;
+            default:
+                throw "Unknown page format " + page.t;
+        }
         let filenameParsing = (currPage + 1) + format; // Name for parsing
         let filename = this.#getNumberWithZeros(currPage + 1) + format; // Final file name
 
