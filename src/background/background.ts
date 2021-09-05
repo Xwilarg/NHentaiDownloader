@@ -1,4 +1,4 @@
-var JSZip = require("jszip");
+import Downloader from "./Downloader";
 
 chrome.tabs.onUpdated.addListener(function
     (_tabId, changeInfo, _tab) {
@@ -23,19 +23,14 @@ function setIcon(url: string) {
         chrome.browserAction.setIcon({path: "Icon-grey.png"});
 }
 
-function downloadDoujinshi(jsonTmp: any, path: string, errorCb: Function, progress: number, name: string) {
-    let zip = new JSZip();
-    zip.folder(path);
-    let json;
-    // @ts-ignore
-    if (typeof browser !== "undefined") { // Firefox
-        json = JSON.parse(JSON.stringify(jsonTmp));
-    } else {
-        json = jsonTmp;
+module background
+{
+    let currentDownloader: Downloader | null = null;
+
+    export function isDownloadFinished(): boolean {
+        return currentDownloader == null || currentDownloader.isDone();
     }
-    download(json, path, errorCb, progress, name, zip, true, 1, 1);
 }
 
-function download(json: any, path: string, errorCb: Function, progress: number, name: string,
-    zip: any, downloadAtEnd: boolean, curr: number, max: number) {
-}
+// @ts-ignore
+window.isDownloadFinished = background.isDownloadFinished;

@@ -1,6 +1,6 @@
 import AParsing from "../parsing/AParsing";
 import * as utils from "../utils/utils";
-import * as message from "./message"
+import { message } from "./message"
 
 export default class Popup
 {
@@ -16,7 +16,7 @@ export default class Popup
         } else if (this.#url.startsWith("https://nhentai.net")) {
             // TODO
         } else {
-            document.getElementById('action')!.innerHTML = message.invalidPage();
+            document.getElementById('action')!.innerHTML =  message.invalidPage();
         }
     }
 
