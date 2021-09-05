@@ -9,11 +9,11 @@ export default class Popup
     }
 
     async updatePreview(newUrl: string) {
-        this.#url = newUrl;
-        let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(this.#url)
+        this.url = newUrl;
+        let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(this.url)
         if (match !== null) {
             await this.#doujinshiPreviewAsync(match[1]);
-        } else if (this.#url.startsWith("https://nhentai.net")) {
+        } else if (this.url.startsWith("https://nhentai.net")) {
             // TODO
         } else {
             document.getElementById('action')!.innerHTML =  message.invalidPage();
@@ -22,14 +22,14 @@ export default class Popup
 
     // Update progress bar on the preview popup
     updateProgress(progress: number, doujinshiName: string, isZipping: boolean) {
-        if (isZipping && progress == -1) { // File is being downloaded
+        if (isZipping && progress == 100) { // File is being downloaded
             document.getElementById('action')!.innerHTML = message.downloadDone();
         } else { // Download done
             document.getElementById('action')!.innerHTML = message.downloadProgress(isZipping ? "Zipping" : "Downloading", doujinshiName, progress);
         }
 
         let updatePreview = this.updatePreview;
-        let url = this.#url;
+        let url = this.url;
         document.getElementById('buttonBack')!.addEventListener('click', function()
         {
             (chrome.extension.getBackgroundPage() as any).goBack();
@@ -126,6 +126,6 @@ export default class Popup
         return pages;
     }
 
-    #url: string;
+    url: string;
     #parsing: AParsing
 }

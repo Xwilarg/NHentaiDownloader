@@ -45,12 +45,17 @@ export default class Downloader
     async #download() {
         try
         {
-            for (let i = 0; i < this.#json.images.pages.length; i++)
+            // Downloading
+            let maxNbOfPage = this.#json.images.pages.length;
+            for (let i = 0; i < maxNbOfPage; i++)
             {
-                await this.#downloadPageInternalAsync(i);
-                this.#progressCallback((i + 1) * 50 / this.#json.images.pages.length, this.#doujinshiName, false);
+                await this.#downloadPageInternalAsync(i, i * 50 / maxNbOfPage);
             }
-            if (this.#useZip !== "raw") { // Zipping resources, raw download doesn't need that
+
+            // Zipping
+            if (this.#useZip !== "raw") { // Raw download doesn't need zipping
+                this.#progressCallback(50, "Preparing zipping...", false);
+
                 this.#zip.generateAsync({type: "blob"}, function updateCallback(elem: any) {
                     try {
                         this.#progressCallback(50 + (elem.percent / 2), elem.currentFile == null ? this.#path : elem.currentFile, true);
@@ -73,7 +78,8 @@ export default class Downloader
         catch (error)
         {
             this.#currentProgress = 100;
-            this.#errorCallback(error)
+            this.#errorCallback(error);
+            throw error;
         }
     }
 
@@ -84,7 +90,7 @@ export default class Downloader
         return nb;
     }
 
-    async #downloadPageInternalAsync(currPage: number) {
+    async #downloadPageInternalAsync(currPage: number, progress: number) {
         let page = this.#json.images.pages[currPage];
         let format;
         switch (page.t)
@@ -102,6 +108,8 @@ export default class Downloader
                 throw "Unknown page format " + page.t;
         }
         let filenameParsing = (currPage + 1) + format; // Name for parsing
+        this.#progressCallback(progress, this.#doujinshiName + "/" + filenameParsing, false);
+
         let filename = this.#getNumberWithZeros(currPage + 1) + format; // Final file name
 
         if (this.#useZip !== "raw") { // ZIP (or equivalent) format
