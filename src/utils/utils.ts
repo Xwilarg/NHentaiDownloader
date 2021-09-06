@@ -6,9 +6,9 @@ export module utils
     export function cleanName(name: string, replaceSpaces: boolean): string {
         let newName = name.split('').filter(e => !invalidCharacter.includes(e)).join('');
         if (replaceSpaces) {
-            return newName.replace(/ +/g, '_');
+            return newName.trim().replace(/ +/g, '_');
         }
-        return newName;
+        return newName.trim();
     }
 
     export function getDownloadName(exampleString: string, prettyName: string, englishName: string, japaneseName: string, id: string, tags: Array<Tag>): string {

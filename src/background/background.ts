@@ -37,7 +37,7 @@ module background
 
     export function downloadDoujinshi(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string) {
         let zip = new JSZip();
-        currentDownloader = new Downloader(jsonTmp, path, errorCallback, progressCallback, name, zip, true);
+        currentDownloader = new Downloader(jsonTmp, path, errorCallback, progressCallback, name, zip, path);
         currentDownloader.startAsync();
     }
 
@@ -87,8 +87,7 @@ module background
                     title = tmp;
                     names.push(title);
                 }
-                zip.folder(utils.cleanName(title, replaceSpaces));
-                currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key], zip, i < length - 1);
+                currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key], zip, i == length - 1 ? finalName : null);
                 await currentDownloader.startAsync();
             }
             else
@@ -98,7 +97,7 @@ module background
         }
     }
 
-    export function goBack() {
+    export function goBack() { // TODO: Doesn't work
         currentDownloader = null;
     }
 

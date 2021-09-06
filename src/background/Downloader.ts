@@ -3,7 +3,7 @@ var JSZip = require("jszip");
 
 export default class Downloader
 {
-    constructor(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string, zip: typeof JSZip, downloadZip: boolean)
+    constructor(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string, zip: typeof JSZip, downloadName: string | null)
     {
         this.progressCallback = progressCallback;
         this.#errorCallback = errorCallback;
@@ -11,7 +11,7 @@ export default class Downloader
         this.#doujinshiName = name;
         this.path = path;
         this.#zip = zip;
-        this.#downloadZip = downloadZip;
+        this.downloadName = downloadName;
 
         // @ts-ignore
         if (typeof browser !== "undefined") { // Firefox
@@ -63,11 +63,11 @@ export default class Downloader
             let maxNbOfPage = this.#json.images.pages.length;
             for (let i = 0; i < maxNbOfPage; i++)
             {
-                await this.#downloadPageInternalAsync(i, i * 50 / maxNbOfPage);
+                await this.#downloadPageInternalAsync(i, i * (this.downloadName !== null ? 50 : 100) / maxNbOfPage);
             }
 
             // Zipping
-            if (this.useZip !== "raw") { // Raw download doesn't need zipping
+            if (this.useZip !== "raw" && this.downloadName !== null) { // Raw download doesn't need zipping
                 this.updateProgress(50, "in progress...", true);
 
                 let self = this;
@@ -78,7 +78,7 @@ export default class Downloader
                 })
                 .then(function(content: any) { // Zipping done
                     self.currentProgress = 100;
-                    fileSaver.saveAs(content, self.path + "." + self.useZip);
+                    fileSaver.saveAs(content, self.downloadName + "." + self.useZip);
                     try {
                         self.updateProgress(100, null, true); // Notify popup that we are done
                     } catch (e) { } // Dead object
@@ -164,7 +164,7 @@ export default class Downloader
     useZip: string; // How data must be downloaded
     #json: any; // JSON containing all data
     #zip: typeof JSZip; // ZIP data that will be downloaded at the end
-    #downloadZip: boolean; // Should the ZIP be downloaded at the end
+    downloadName: string | null; // Name of the ZIP, null if should not download
     path: string; // Save path
     progressCallback: Function; // Function to call when progress is made
     #errorCallback: Function; // Function to call if an error occured
