@@ -30,12 +30,24 @@ export default class Downloader
         });
     }
 
+    updateProgress(progress: number, name: string | null, isZipping: boolean) {
+        this.progressCallback(progress, name, isZipping);
+        this.#progressPercent = progress;
+        this.#progressName = name;
+        this.#progressZipping = isZipping;
+    }
+
+    updateProgressLatest(updateCallback: Function) {
+        this.progressCallback = updateCallback;
+        this.progressCallback(this.#progressPercent, this.#progressName, this.#progressZipping);
+    }
+
     #init(useZip: string) {
         this.useZip = useZip;
         if (this.useZip === "raw") {
             this.currentProgress = 100;
             try {
-                this.progressCallback(100, this.#doujinshiName, false);
+                this.updateProgress(100, this.#doujinshiName, false);
             } catch (e) { } // Dead object
         }
         this.#download();
@@ -53,24 +65,24 @@ export default class Downloader
 
             // Zipping
             if (this.useZip !== "raw") { // Raw download doesn't need zipping
-                this.progressCallback(50, "in progress...", true);
+                this.updateProgress(50, "in progress...", true);
 
                 let self = this;
                 this.#zip.generateAsync({type: "blob"}, function(elem: any) {
                     try {
-                        self.progressCallback(50 + (elem.percent / 2), elem.currentFile == null ? self.path : elem.currentFile, true);
+                        self.updateProgress(50 + (elem.percent / 2), elem.currentFile == null ? self.path : elem.currentFile, true);
                     } catch (e) { } // Dead object
                 })
                 .then(function(content: any) { // Zipping done
                     self.currentProgress = 100;
                     fileSaver.saveAs(content, self.path + "." + self.useZip);
                     try {
-                        self.progressCallback(100, null, true); // Notify popup that we are done
+                        self.updateProgress(100, null, true); // Notify popup that we are done
                     } catch (e) { } // Dead object
                 });
             } else {
                 this.currentProgress = 100;
-                this.progressCallback(100, null, true); // Notify popup that we are done
+                this.updateProgress(100, null, true); // Notify popup that we are done
             }
         }
         catch (error)
@@ -107,7 +119,7 @@ export default class Downloader
                 throw "Unknown page format " + page.t;
         }
         let filenameParsing = (currPage + 1) + format; // Name for parsing
-        this.progressCallback(progress, this.#doujinshiName + "/" + filenameParsing, false);
+        this.updateProgress(progress, this.#doujinshiName + "/" + filenameParsing, false);
 
         let filename = this.#getNumberWithZeros(currPage + 1) + format; // Final file name
 
@@ -155,4 +167,9 @@ export default class Downloader
     currentProgress: Number; // Current progress of the download
     #doujinshiName: string; // Name of the doujinshi
     #mediaId: number; // Id of the media
+
+    // Progress info
+    #progressPercent: number;
+    #progressName: string | null;
+    #progressZipping: boolean;
 }

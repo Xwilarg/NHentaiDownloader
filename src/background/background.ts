@@ -39,9 +39,10 @@ module background
         currentDownloader = null;
     }
 
-    export function updateProgress() {
+    export function updateProgress(updateCallback: Function) {
         if (!isDownloadFinished())
         {
+            currentDownloader!.updateProgressLatest(updateCallback);
         }
     }
 }

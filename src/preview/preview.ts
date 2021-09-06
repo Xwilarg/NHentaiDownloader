@@ -1,7 +1,6 @@
-import ApiParsing from "../parsing/ApiParsing";
 import Popup from "./popup"
 
-let popup = new Popup(new ApiParsing());
+let popup = new Popup();
 
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     chrome.storage.sync.get({
@@ -26,5 +25,5 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         (chrome.extension.getBackgroundPage() as any).updateProgress(popup.updateProgress);
         return;
     }
-    popup.updatePreview(currUrl);
+    popup.updatePreviewAsync(currUrl);
 });

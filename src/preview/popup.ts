@@ -1,20 +1,31 @@
 import AParsing from "../parsing/AParsing";
-import {utils} from "../utils/utils";
+import ApiParsing from "../parsing/ApiParsing";
+import { utils } from "../utils/utils";
 import { message } from "./message"
 
 export default class Popup
 {
-    constructor(parsing: AParsing) {
-        this.#parsing = parsing;
+    constructor() {
+        this.#parsing = new ApiParsing();
     }
 
-    async updatePreview(newUrl: string) {
-        this.url = newUrl;
-        let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(this.url)
+    static getInstance(): Popup {
+        if (Popup.#instance === null) {
+            Popup.#instance = new Popup();
+        }
+        return Popup.#instance;
+    }
+
+    static #instance: Popup | null = null
+
+    async updatePreviewAsync(newUrl: string) {
+        let self = Popup.getInstance();
+        self.url = newUrl;
+        let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(self.url)
         if (match !== null) {
-            await this.#doujinshiPreviewAsync(match[1]);
-        } else if (this.url.startsWith("https://nhentai.net")) {
-            // TODO
+            await self.#doujinshiPreviewAsync(match[1]);
+        } else if (self.url.startsWith("https://nhentai.net")) {
+            document.getElementById('action')!.innerHTML =  "TODO: " + self.url;
         } else {
             document.getElementById('action')!.innerHTML =  message.invalidPage();
         }
@@ -28,12 +39,11 @@ export default class Popup
             document.getElementById('action')!.innerHTML = message.downloadProgress(isZipping ? "Zipping" : "Downloading", doujinshiName, progress);
         }
 
-        let updatePreview = this.updatePreview;
-        let url = this.url;
         document.getElementById('buttonBack')!.addEventListener('click', function()
         {
+            let popup = Popup.getInstance();
             (chrome.extension.getBackgroundPage() as any).goBack();
-            updatePreview(url);
+            popup.updatePreviewAsync(popup.url);
         });
     }
 
