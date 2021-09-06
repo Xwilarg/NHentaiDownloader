@@ -1,4 +1,5 @@
 import Downloader from "./Downloader";
+var JSZip = require("jszip");
 
 chrome.tabs.onUpdated.addListener(function
     (_tabId, changeInfo, _tab) {
@@ -32,7 +33,9 @@ module background
     }
 
     export function downloadDoujinshi(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string) {
-        currentDownloader = new Downloader(jsonTmp, path, errorCallback, progressCallback, name);
+        let zip = new JSZip();
+        currentDownloader = new Downloader(jsonTmp, path, errorCallback, progressCallback, name, zip, true);
+        currentDownloader.startAsync();
     }
 
     export function goBack() {

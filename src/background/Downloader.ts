@@ -1,18 +1,18 @@
-var JSZip = require("jszip");
 var fileSaver = require("file-saver");
+var JSZip = require("jszip");
 
 export default class Downloader
 {
-    constructor(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string)
+    constructor(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string, zip: typeof JSZip, downloadZip: boolean)
     {
         this.progressCallback = progressCallback;
         this.#errorCallback = errorCallback;
         this.currentProgress = 0;
         this.#doujinshiName = name;
         this.path = path;
+        this.#zip = zip;
+        this.#downloadZip = downloadZip;
 
-        this.#zip = new JSZip();
-        this.#zip.folder(path);
         // @ts-ignore
         if (typeof browser !== "undefined") { // Firefox
             this.#json = JSON.parse(JSON.stringify(jsonTmp));
@@ -21,13 +21,6 @@ export default class Downloader
         }
 
         this.#mediaId = this.#json.media_id;
-
-        let self = this;
-        chrome.storage.sync.get({
-            useZip: "zip"
-        }, function(elems) {
-            self.#init(elems.useZip);
-        });
     }
 
     updateProgress(progress: number, name: string | null, isZipping: boolean) {
@@ -42,18 +35,28 @@ export default class Downloader
         this.progressCallback(this.#progressPercent, this.#progressName, this.#progressZipping);
     }
 
-    #init(useZip: string) {
-        this.useZip = useZip;
-        if (this.useZip === "raw") {
-            this.currentProgress = 100;
-            try {
-                this.updateProgress(100, this.#doujinshiName, false);
-            } catch (e) { } // Dead object
-        }
-        this.#download();
+    async startAsync() {
+        let self = this;
+        await new Promise((resolve, _reject) => {
+            resolve(
+                chrome.storage.sync.get({
+                    useZip: "zip"
+                }, function(elems) {
+                    self.useZip = elems.useZip;
+                    if (self.useZip === "raw") {
+                        self.currentProgress = 100;
+                        try {
+                            self.updateProgress(100, this.#doujinshiName, false);
+                        } catch (e) { } // Dead object
+                    }
+                    self.#zip.folder(self.path);
+                })
+            );
+        });
+        await self.#downloadAsync();
     }
 
-    async #download() {
+    async #downloadAsync() {
         try
         {
             // Downloading
@@ -161,6 +164,7 @@ export default class Downloader
     useZip: string; // How data must be downloaded
     #json: any; // JSON containing all data
     #zip: typeof JSZip; // ZIP data that will be downloaded at the end
+    #downloadZip: boolean; // Should the ZIP be downloaded at the end
     path: string; // Save path
     progressCallback: Function; // Function to call when progress is made
     #errorCallback: Function; // Function to call if an error occured
