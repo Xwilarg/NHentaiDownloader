@@ -34,9 +34,23 @@ module background
     export function downloadDoujinshi(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string) {
         currentDownloader = new Downloader(jsonTmp, path, errorCallback, progressCallback, name);
     }
+
+    export function goBack() {
+        currentDownloader = null;
+    }
+
+    export function updateProgress() {
+        if (!isDownloadFinished())
+        {
+        }
+    }
 }
 
 // @ts-ignore
 window.isDownloadFinished = background.isDownloadFinished;
 // @ts-ignore
 window.downloadDoujinshi = background.downloadDoujinshi;
+// @ts-ignore
+window.goBack = background.goBack;
+// @ts-ignore
+window.updateProgress = background.updateProgress;
