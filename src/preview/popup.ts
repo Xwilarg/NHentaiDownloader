@@ -5,6 +5,8 @@ import { message } from "./message"
 
 export default class Popup
 {
+    //#region "ctor and singleton"
+
     constructor() {
         this.#parsing = new ApiParsing();
     }
@@ -17,19 +19,7 @@ export default class Popup
     }
 
     static #instance: Popup | null = null
-
-    async updatePreviewAsync(newUrl: string) {
-        let self = Popup.getInstance();
-        self.url = newUrl;
-        let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(self.url)
-        if (match !== null) {
-            await self.#doujinshiPreviewAsync(match[1]);
-        } else if (self.url.startsWith("https://nhentai.net")) {
-            document.getElementById('action')!.innerHTML =  "TODO: " + self.url;
-        } else {
-            document.getElementById('action')!.innerHTML =  message.invalidPage();
-        }
-    }
+    //#endregion "ctor and singleton"
 
     // Update progress bar on the preview popup
     updateProgress(progress: number, doujinshiName: string, isZipping: boolean) {
@@ -45,6 +35,23 @@ export default class Popup
             (chrome.extension.getBackgroundPage() as any).goBack();
             popup.updatePreviewAsync(popup.url);
         });
+    }
+
+    // #region "single download"
+    async updatePreviewAsync(newUrl: string) {
+        let self = Popup.getInstance();
+        self.url = newUrl;
+        let match = /https:\/\/nhentai.net\/g\/([0-9]+)\/([/0-9a-z]+)?/.exec(self.url)
+        if (match !== null) {
+            await self.#doujinshiPreviewAsync(match[1]);
+        } else if (self.url.startsWith("https://nhentai.net")) {
+            // @ts-ignore
+            chrome.tabs.executeScript(null, {
+                file: "js/getHtml.js" // Get the HTML of the page
+            });
+        } else {
+            document.getElementById('action')!.innerHTML =  message.invalidPage();
+        }
     }
 
     // Display popup for a doujinshi
@@ -84,8 +91,210 @@ export default class Popup
             });
         }
     }
+    //#endregion "single download"
 
-    #saveIdInLocalStorage(id: number, allIds: Array<number>, checked: boolean) {
+    //#region "multiple download"
+    updatePreviewAll(sourceHtml: string, downloadName: string, useZip: string, replaceSpaces: boolean) {
+        let self = Popup.getInstance();
+
+        // Get doujins on the page
+        let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)((<br>)+<input [^>]+>[^<]+<br>[^<]+<br>[^<]+)?<\/div>/g
+        let match;
+        let finalHtml = "";
+        let allIds: Array<string> = [];
+        let i = 0;
+        let pageHtml = sourceHtml.replace(/<\/a>/g, '\n');
+        do {
+            match = matchs.exec(pageHtml);
+            if (match !== null) {
+                let isChecked = false;
+                if (match[4] !== undefined ) {
+                    // For each doujin, we check if our custom checkbox is ticked
+                    var testMatch = pageHtml.match('<input id="' + match[1] + '" type="checkbox"( value="(true|false)")?>');
+                    try {
+                        isChecked = testMatch![2] === "true";
+                    } catch (_) {
+                        isChecked = false;
+                    }
+                }
+                let tmpName;
+                if (downloadName === "{pretty}") {
+                    tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
+                } else {
+                    tmpName = match[2].trim();
+                }
+                // Then we add a checkbox on the extension (preticked or not depending of previous result)
+                finalHtml += '<input id="' + match[1] + '" name="' + tmpName + '" type="checkbox" ' + (isChecked ? "checked" : "") + '/>' + tmpName + '<br/>';
+                allIds.push(match[1]);
+                i++;
+            }
+        } while (match);
+        if (finalHtml === "") {
+            document.getElementById('action')!.innerHTML = message.invalidPage();
+            return;
+        }
+
+        // Use URL for default download name
+        let parts = self.url.split('/')
+        let name;
+        if (parts[parts.length - 1] === "" || parts[parts.length - 1].startsWith("?page=")) name = parts[parts.length - 2];
+        else name = parts[parts.length - 1];
+        name = name.replace("q=", ""); // Artifact when doing a search
+
+        // Appends the extension (none is raw download)
+        let extension = "";
+        if (useZip != "raw")
+        {
+            extension = "." + useZip;
+        }
+
+        // Add the HTML
+        let nbDownload = 0;
+        let currPage = 0;
+        let maxPage = 0;
+        let html =  '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
+        + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><br/><input type="button" id="button" value="Download"/>';
+        let lastMatch = /page=([0-9]+)" class="last">/.exec(pageHtml) // Get the number of pages
+        if (lastMatch !== null) {
+            currPage = parseInt(/page=([0-9]+)" class="page current">/.exec(pageHtml)![1]);
+            maxPage = parseInt(lastMatch[1]);
+            nbDownload = maxPage - currPage + 1;
+            html += '<br/><input type="button" id="buttonAll" value="Download all (' + nbDownload + ' pages)"/><br/><input type="text" id="downloadInput"/><input type="button" id="buttonHelp" value="?"/>';
+        }
+        html += '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
+        document.getElementById('action')!.innerHTML = html;
+        (document.getElementById('path') as HTMLInputElement).value = utils.cleanName(name, replaceSpaces);
+        if (lastMatch !== null) {
+            (document.getElementById('downloadInput') as HTMLInputElement).value = currPage + "-" + maxPage;
+            document.getElementById('buttonHelp')!.addEventListener('click', function() {
+                alert("Input the pages you want to download for the \"Download all\" feature\nWrite your pages separated by comma ',', you can also write range of number by separating them by a dash '-'\n"
+                + "Example: 2,4,6-10 will download the pages 2, 4 and 6 to 10 (included)");
+            });
+        }
+
+        // Invert all checkbox
+        document.getElementById('invert')!.addEventListener('click', function()
+        {
+            let storageAllIds;
+            chrome.storage.local.get({
+                allIds: []
+            }, function(elemsLocal) {
+                // Iterate on all checkboxs and reverse the value
+                storageAllIds = elemsLocal.allIds;
+                for (let i = 0; i < allIds.length; i++) {
+                    let id = allIds[i];
+                    let elem = (document.getElementById(id) as HTMLInputElement);
+                    elem.checked = !elem.checked;
+                    storageAllIds = self.#saveIdInLocalStorage(id, storageAllIds, elem.checked);
+                }
+                chrome.storage.local.set({
+                    allIds: storageAllIds
+                });
+                // @ts-ignore
+                chrome.tabs.executeScript(null, {
+                    file: "js/updateContent.js" // Update the checkboxs of the page
+                });
+            });
+        });
+
+        // Clear all checkboxs
+        document.getElementById('remove')!.addEventListener('click', function()
+        {
+            // Just uncheck everything and empty local storage
+            allIds.forEach(function(id) {
+                (document.getElementById(id) as HTMLInputElement).checked = false;
+            });
+            chrome.storage.local.set({
+                allIds: []
+            });
+            // @ts-ignore
+            chrome.tabs.executeScript(null, {
+                file: "js/updateContent.js" // Update the checkboxs of the page
+            });
+        });
+
+        // Download button
+        document.getElementById('button')!.addEventListener('click', function()
+        {
+            let allDoujinshis : Record<string, string> = {};
+            allIds.forEach(function(id) {
+                let elem = document.getElementById(id) as HTMLInputElement;
+                if (elem.checked) {
+                    allDoujinshis[id] = elem.name;
+                }
+            });
+            if (Object.keys(allDoujinshis).length > 0) { // There is at least one element selected, we launch download
+                let finalName = (document.getElementById('path') as HTMLInputElement).value;
+                (chrome.extension.getBackgroundPage() as any).downloadAllDoujinshis(allDoujinshis, finalName, function(error: string) {
+                    document.getElementById('action')!.innerHTML = message.errorDownload(error);
+                }, Popup.getInstance().updateProgress);
+                self.updateProgress(0, finalName, false);
+            } else {
+                document.getElementById('action')!.innerHTML = "You must select at least one element to download.";
+            }
+        });
+
+        if (nbDownload > 0) {
+            // User input saying how many pages he wants to download
+            document.getElementById('downloadInput')!.addEventListener('change', function() {
+                let pages = self.#parseDownloadAll(maxPage);
+                if (pages.length !== 0) {
+                    (document.getElementById("buttonAll") as HTMLInputElement).value = 'Download all (' + pages.length + ' pages)';
+                }
+            });
+
+            // Download many pages at once
+            document.getElementById('buttonAll')!.addEventListener('click', function()
+            {
+                let allDoujinshis : Record<string, string> = {};
+                allIds.forEach(function(id) {
+                    let elem = (document.getElementById(id) as HTMLInputElement);
+                    allDoujinshis[id] = elem.name;
+                });
+                let pages = self.#parseDownloadAll(maxPage);
+                if (typeof pages === "string") {
+                    alert(pages);
+                    (document.getElementById('downloadInput') as HTMLInputElement).value = currPage + "-" + nbDownload;
+                } else {
+                    let choice = confirm("You are going to download " + pages.length + " pages of doujinshi. Are you sure you want to continue?");
+                    if (choice) {
+                        let finalName = (document.getElementById('path') as HTMLInputElement).value;
+                        (chrome.extension.getBackgroundPage() as any).downloadAllPages(allDoujinshis, currPage, pages, finalName, function(error: string) {
+                            document.getElementById('action')!.innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
+                        }, self.updateProgress, self.url);
+                        self.updateProgress(0, finalName, false);
+                    }
+                }
+            });
+        }
+
+        // We listen to all checkboxs on the page
+        allIds.forEach(function(id) {
+            (document.getElementById(id) as HTMLInputElement).addEventListener('change', function() {
+                let checked = this.checked;
+                chrome.storage.local.get({
+                    allIds: []
+                }, function(elemsLocal) { // Add the ids in local storage so we can easily find them back from anywhere (even if page is reloaded etc)
+                    chrome.storage.local.set({
+                        allIds: self.#saveIdInLocalStorage(id, elemsLocal.allIds, checked)
+                    });
+                });
+                // @ts-ignore
+                chrome.tabs.executeScript(null, {
+                    file: "js/updateContent.js" // Update the checkboxs of the page
+                });
+            });
+            chrome.storage.local.get({
+                allIds: []
+            }, function(elemsLocal) {
+                if (elemsLocal.allIds.includes(id)) {
+                    (document.getElementById(id) as HTMLInputElement).checked = true;
+                }
+            });
+        });
+    }
+
+    #saveIdInLocalStorage(id: string, allIds: Array<string>, checked: boolean) {
         if (checked) {
             allIds.push(id);
         } else {
@@ -135,6 +344,7 @@ export default class Popup
         });
         return pages;
     }
+    //#endregion "multiple download"
 
     url: string;
     #parsing: AParsing

@@ -15,7 +15,9 @@ module.exports = {
   entry: {
     background: './src/background/background.ts',
     content: './src/content/content.ts',
+    updateContent: './src/content/updateContent.ts',
     preview: './src/preview/preview.ts',
+    getHtml: './src/preview/getHtml.ts',
     options: './src/options/options.ts'
   },
   resolve: {
