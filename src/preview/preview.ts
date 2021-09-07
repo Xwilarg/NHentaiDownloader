@@ -2,7 +2,7 @@ import Popup from "./popup"
 import ApiParsing from "../parsing/ApiParsing";
 import HtmlParsing from "../parsing/HtmlParsing";
 
-let popup = new Popup();
+let popup = Popup.getInstance();
 
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     chrome.storage.sync.get({
