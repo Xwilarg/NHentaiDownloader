@@ -28,6 +28,17 @@ This extension was removed the 04/12/2020 from the Chrome Store because it doesn
 While there is nothing I can do against that, I still want to thanks you for using it, over 2 years it got a note of 4.3/5 and 12 858 users.<br/>
 ![Chrome](Preview/Chrome.png)
 
+## Build locally
+```
+npm install
+npm run build
+```
+
+### Start unit tests
+```
+npm test
+```
+
 ## Single download
 
 ![Overview](Preview/Overview.png)<br/>
