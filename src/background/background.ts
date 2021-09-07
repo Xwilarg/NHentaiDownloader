@@ -1,4 +1,6 @@
+import AParsing from "../parsing/AParsing";
 import ApiParsing from "../parsing/ApiParsing";
+import HtmlParsing from "../parsing/HtmlParsing";
 import Downloader from "./Downloader";
 import { utils } from "../utils/utils";
 var JSZip = require("jszip");
@@ -29,7 +31,16 @@ function setIcon(url: string) {
 module background
 {
     let currentDownloader: Downloader | null = null;
-    let parsing = new ApiParsing();
+    let parsing: AParsing;
+    chrome.storage.sync.get({
+        htmlParsing: false
+    }, function(elems) {
+        if (elems.htmlParsing) {
+            parsing = new HtmlParsing();
+        } else {
+            parsing = new ApiParsing();
+        }
+    });
 
     export function isDownloadFinished(): boolean {
         return currentDownloader == null || currentDownloader.isDone();

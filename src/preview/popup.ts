@@ -1,16 +1,10 @@
 import AParsing from "../parsing/AParsing";
-import ApiParsing from "../parsing/ApiParsing";
 import { utils } from "../utils/utils";
 import { message } from "./message"
 
 export default class Popup
 {
-    //#region "ctor and singleton"
-
-    constructor() {
-        this.#parsing = new ApiParsing();
-    }
-
+    //#region "singleton"
     static getInstance(): Popup {
         if (Popup.#instance === null) {
             Popup.#instance = new Popup();
@@ -18,8 +12,12 @@ export default class Popup
         return Popup.#instance;
     }
 
+    initParsing(parsing: AParsing) {
+        this.#parsing = parsing;
+    }
+
     static #instance: Popup | null = null
-    //#endregion "ctor and singleton"
+    //#endregion "singleton"
 
     // Update progress bar on the preview popup
     updateProgress(progress: number, doujinshiName: string, isZipping: boolean) {
