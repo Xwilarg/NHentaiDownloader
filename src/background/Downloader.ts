@@ -64,6 +64,9 @@ export default class Downloader
             for (let i = 0; i < maxNbOfPage; i++)
             {
                 await this.#downloadPageInternalAsync(i, i * (this.downloadName !== null ? 50 : 100) / maxNbOfPage);
+                if (this.isAwaitingAbort) {
+                    throw "Download was aborted";
+                }
             }
 
             // Zipping
@@ -171,6 +174,8 @@ export default class Downloader
     currentProgress: Number; // Current progress of the download
     #doujinshiName: string; // Name of the doujinshi
     #mediaId: number; // Id of the media
+
+    isAwaitingAbort: boolean = false;
 
     // Progress info
     #progressPercent: number;

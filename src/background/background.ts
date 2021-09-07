@@ -165,7 +165,11 @@ module background
         }
     }
 
-    export function goBack() { // TODO: Doesn't work
+    export function goBack() {
+        if (!isDownloadFinished()) {
+            currentDownloader!.isAwaitingAbort = true;
+            currentDownloader!.currentProgress = 100;
+        }
         currentDownloader = null;
     }
 
