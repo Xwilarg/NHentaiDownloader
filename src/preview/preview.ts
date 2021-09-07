@@ -9,7 +9,9 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         darkMode: false,
         htmlParsing: false
     }, function(elems) {
-        popup.initParsing(elems.htmlParsing ? new HtmlParsing() : new ApiParsing());
+        if (popup.parsing === null) {
+            popup.parsing = elems.htmlParsing ? new HtmlParsing() : new ApiParsing();
+        }
         if (elems.darkMode) {
             document.getElementById('htmlLight')!.id = 'htmlDark';
         }

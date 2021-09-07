@@ -12,10 +12,6 @@ export default class Popup
         return Popup.#instance;
     }
 
-    initParsing(parsing: AParsing) {
-        this.#parsing = parsing;
-    }
-
     static #instance: Popup | null = null
     //#endregion "singleton"
 
@@ -54,13 +50,13 @@ export default class Popup
 
     // Display popup for a doujinshi
     async #doujinshiPreviewAsync(id: string) {
-        const resp = await fetch(this.#parsing.GetUrl(id));
+        const resp = await fetch(this.parsing!.GetUrl(id));
         if (resp.status == 403) {
             document.getElementById('action')!.innerHTML = message.invalidPage();
         } else if (!resp.ok) {
             document.getElementById('action')!.innerHTML = message.errorOther(resp.status, resp.statusText);
         } else {
-            let json = await this.#parsing.GetJsonAsync(resp);
+            let json = await this.parsing!.GetJsonAsync(resp);
             let self = this;
             chrome.storage.sync.get({
                 useZip: "zip",
@@ -345,5 +341,5 @@ export default class Popup
     //#endregion "multiple download"
 
     url: string;
-    #parsing: AParsing
+    parsing: AParsing | null = null
 }
