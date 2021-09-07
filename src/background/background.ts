@@ -42,10 +42,18 @@ module background
     }
 
     export function downloadAllDoujinshis(allDoujinshis: Record<string, string>, finalName: string, errorCallback: Function, progressCallback: Function) {
-        downloadAllDoujinshisAsync(allDoujinshis, finalName, errorCallback, progressCallback);
+        let zip = new JSZip();
+        downloadAllDoujinshisAsync(zip, allDoujinshis, finalName, errorCallback, progressCallback, true);
     }
 
-    async function downloadAllDoujinshisAsync(allDoujinshis: Record<string, string>, finalName: string, errorCallback: Function, progressCallback: Function) {
+    async function downloadAllDoujinshisAsync(
+        zip: typeof JSZip,
+        allDoujinshis: Record<string, string>,
+        finalName: string,
+        errorCallback: Function,
+        progressCallback: Function,
+        downloadAtEnd: boolean
+    ) {
         let downloadName: string = "";
         let duplicateBehaviour: string = "";
         let replaceSpaces: boolean = false;
@@ -62,7 +70,6 @@ module background
                 })
             );
         });
-        let zip = new JSZip();
         let names: Array<string> = [];
         let length = Object.keys(allDoujinshis).length;
         let allKeys = Object.keys(allDoujinshis);
@@ -87,12 +94,73 @@ module background
                     title = tmp;
                     names.push(title);
                 }
-                currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key], zip, i == length - 1 ? finalName : null);
+                currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key], zip, (downloadAtEnd && i == length - 1) ? finalName : null);
                 await currentDownloader.startAsync();
             }
             else
             {
                 errorCallback("Can't download " + key + " (Code " + resp.status + ": " + resp.statusText + ").");
+            }
+        }
+    }
+
+    export function downloadAllPages(allDoujinshis: Record<string, string>, pagesArr: Array<number>, path: string, errorCallback: Function, progressCallback: Function, url: string) {
+        downloadAllPagesAsync(allDoujinshis, pagesArr, path, errorCallback, progressCallback, url);
+    }
+
+    async function downloadAllPagesAsync(
+        allDoujinshis: Record<string, string>,
+        pagesArr: Array<number>,
+        path: string,
+        errorCallback: Function,
+        progressCallback: Function,
+        url: string
+    ) {
+        let downloadName: string = "";
+        await new Promise((resolve, _reject) => {
+            resolve(
+                chrome.storage.sync.get({
+                    downloadName: "{pretty}"
+                }, function(elems) {
+                    downloadName = elems.downloadName;
+                })
+            );
+        });
+
+        let zip = new JSZip();
+        for (let i = 0; i < pagesArr.length; i++) {
+            let curr = pagesArr[i];
+            curr = pagesArr[0];
+            pagesArr.splice(0, 1);
+            let m = /page=([0-9]+)/.exec(url)
+            if (m !== null) {
+                url = url.replace(m[0], "page=" + curr);
+            } else if (url.includes("?")) {
+                url += "&page=" + curr
+            } else {
+                url += "?page=" + curr
+            }
+            const resp = await fetch(url);
+            if (resp.ok)
+            {
+                const text = await resp.text();
+                allDoujinshis = {};
+                let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)((<br>)+<input [^>]+>[^<]+<br>[^<]+<br>[^<]+)?<\/div>/g
+                let match;
+                let pageHtml = text.replace(/<\/a>/g, '\n');
+                do {
+                    match = matchs.exec(pageHtml);
+                    if (match !== null) {
+                        let tmpName;
+                        if (downloadName === "{pretty}") {
+                            tmpName = match[2].replace(/\[[^\]]+\]/g, "").replace(/\([^\)]+\)/g, "").replace(/\{[^\}]+\}/g, "").trim();
+                        } else {
+                            tmpName = match[2].trim();
+                        }
+                        allDoujinshis[match[1]] = tmpName;
+                    }
+                } while (match);
+                await downloadAllDoujinshisAsync(zip, allDoujinshis, path + " (" + curr + ")", errorCallback, progressCallback, i == pagesArr.length - 1);
             }
         }
     }
@@ -119,3 +187,5 @@ window.downloadAllDoujinshis = background.downloadAllDoujinshis;
 window.goBack = background.goBack;
 // @ts-ignore
 window.updateProgress = background.updateProgress;
+// @ts-ignore
+window.downloadAllPages = background.downloadAllPages;

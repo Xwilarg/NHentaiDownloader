@@ -259,7 +259,7 @@ export default class Popup
                     let choice = confirm("You are going to download " + pages.length + " pages of doujinshi. Are you sure you want to continue?");
                     if (choice) {
                         let finalName = (document.getElementById('path') as HTMLInputElement).value;
-                        (chrome.extension.getBackgroundPage() as any).downloadAllPages(allDoujinshis, currPage, pages, finalName, function(error: string) {
+                        (chrome.extension.getBackgroundPage() as any).downloadAllPages(allDoujinshis, pages, finalName, function(error: string) {
                             document.getElementById('action')!.innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
                         }, self.updateProgress, self.url);
                         self.updateProgress(0, finalName, false);
