@@ -63,7 +63,7 @@ export default class Downloader
             let maxNbOfPage = this.#json.images.pages.length;
             for (let i = 0; i < maxNbOfPage; i++)
             {
-                await this.#downloadPageInternalAsync(i, i * (this.downloadName !== null ? 50 : 100) / maxNbOfPage);
+                await this.#downloadPageInternalAsync(i, i * 100 / maxNbOfPage);
                 if (this.isAwaitingAbort) {
                     throw "Download was aborted";
                 }
@@ -73,12 +73,12 @@ export default class Downloader
             if (this.downloadName !== null) {
                 // Zipping
                 if (this.useZip !== "raw") { // Raw download doesn't need zipping
-                    this.updateProgress(50, "in progress...", true);
+                    this.updateProgress(0, "in progress...", true);
 
                     let self = this;
                     this.#zip.generateAsync({type: "blob"}, function(elem: any) {
                         try {
-                            self.updateProgress(50 + (elem.percent / 2), elem.currentFile == null ? self.path : elem.currentFile, true);
+                            self.updateProgress(elem.percent, elem.currentFile == null ? self.path : elem.currentFile, true);
                         } catch (e) { } // Dead object
                     })
                     .then(function(content: any) { // Zipping done
