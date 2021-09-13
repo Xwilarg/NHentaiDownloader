@@ -69,26 +69,29 @@ export default class Downloader
                 }
             }
 
-            // Zipping
-            if (this.useZip !== "raw" && this.downloadName !== null) { // Raw download doesn't need zipping
-                this.updateProgress(50, "in progress...", true);
+            // For multiple download, we want to skip the "zipping" part
+            if (this.downloadName !== null) {
+                // Zipping
+                if (this.useZip !== "raw") { // Raw download doesn't need zipping
+                    this.updateProgress(50, "in progress...", true);
 
-                let self = this;
-                this.#zip.generateAsync({type: "blob"}, function(elem: any) {
-                    try {
-                        self.updateProgress(50 + (elem.percent / 2), elem.currentFile == null ? self.path : elem.currentFile, true);
-                    } catch (e) { } // Dead object
-                })
-                .then(function(content: any) { // Zipping done
-                    self.currentProgress = 100;
-                    fileSaver.saveAs(content, self.downloadName + "." + self.useZip);
-                    try {
-                        self.updateProgress(100, null, true); // Notify popup that we are done
-                    } catch (e) { } // Dead object
-                });
-            } else {
-                this.currentProgress = 100;
-                this.updateProgress(100, null, true); // Notify popup that we are done
+                    let self = this;
+                    this.#zip.generateAsync({type: "blob"}, function(elem: any) {
+                        try {
+                            self.updateProgress(50 + (elem.percent / 2), elem.currentFile == null ? self.path : elem.currentFile, true);
+                        } catch (e) { } // Dead object
+                    })
+                    .then(function(content: any) { // Zipping done
+                        self.currentProgress = 100;
+                        fileSaver.saveAs(content, self.downloadName + "." + self.useZip);
+                        try {
+                            self.updateProgress(100, null, true); // Notify popup that we are done
+                        } catch (e) { } // Dead object
+                    });
+                } else {
+                    this.currentProgress = 100;
+                    this.updateProgress(100, null, true); // Notify popup that we are done
+                }
             }
         }
         catch (error)
