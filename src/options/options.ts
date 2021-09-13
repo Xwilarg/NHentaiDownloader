@@ -5,9 +5,10 @@ import Select from "./Select";
 let options = [
     new Select("useZip"),
     new InputField("downloadName"),
-    new Select("duplicateBehaviour"),
     new CheckBox("displayCheckbox"),
     new CheckBox("darkMode"),
+    new Select("duplicateBehaviour"),
+    new CheckBox("downloadSeparately"),
     new CheckBox("replaceSpaces"),
     new CheckBox("htmlParsing")
 ]
@@ -19,7 +20,8 @@ chrome.storage.sync.get({
     duplicateBehaviour: "rename",
     darkMode: false,
     replaceSpaces: true,
-    htmlParsing: false
+    htmlParsing: false,
+    downloadSeparately: false
 }, function(elems) {
     options.forEach(o => {
         o.init(elems);

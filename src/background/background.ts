@@ -68,16 +68,19 @@ module background
         let downloadName: string = "";
         let duplicateBehaviour: string = "";
         let replaceSpaces: boolean = false;
+        let downloadSeparately: boolean = false;
         await new Promise((resolve, _reject) => {
             resolve(
                 chrome.storage.sync.get({
                     downloadName: "{pretty}",
                     duplicateBehaviour: "remove",
-                    replaceSpaces: true
+                    replaceSpaces: true,
+                    downloadSeparately: false
                 }, function(elems) {
                     downloadName = elems.downloadName;
                     duplicateBehaviour = elems.duplicateBehaviour;
                     replaceSpaces = elems.replaceSpaces;
+                    downloadSeparately = elems.downloadSeparately;
                 })
             );
         });
@@ -105,7 +108,12 @@ module background
                     title = tmp;
                     names.push(title);
                 }
-                currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key], zip, (downloadAtEnd && i == length - 1) ? finalName : null);
+                currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key], zip,
+                (downloadSeparately || (downloadAtEnd && i == length - 1)) ? finalName : null);
+                // We download the ZIP file in the following cases:
+                // downloadSeparately is true (set in extension options)
+                // OR downloadAtEnd is true (can be false if downloading many pages) AND we are at the doujin of the current list
+
                 await currentDownloader.startAsync();
             }
             else

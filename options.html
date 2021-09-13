@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <body>
-        <h3>Basic behaviour</h3>
+        <h3>Global behaviour</h3>
         Download format:
         <select id="useZip">
             <option value="zip">ZIP</option>
@@ -12,14 +12,18 @@
         Display checkboxs on NHentai:
         <input id="displayCheckbox" type="checkbox"/>
         <br/>
+        Dark mode:
+        <input id="darkMode" type="checkbox"/>
+        <br/><hr/>
+        <h3>Multiple download</h3>
         Behaviour on duplicate:
         <select id="duplicateBehaviour">
             <option value="rename">Rename</option>
             <option value="ignore">Ignore</option>
         </select>
         <br/>
-        Dark mode:
-        <input id="darkMode" type="checkbox"/>
+        Download each file separately:
+        <input id="downloadSeparately" type="checkbox"/>
         <br/><hr/>
         <h3>Advanced behaviour</h3>
         Use HTML to get API info:
