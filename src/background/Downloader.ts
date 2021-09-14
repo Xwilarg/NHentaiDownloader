@@ -63,7 +63,27 @@ export default class Downloader
             let maxNbOfPage = this.#json.images.pages.length;
             for (let i = 0; i < maxNbOfPage; i++)
             {
-                await this.#downloadPageInternalAsync(i, i * 100 / maxNbOfPage);
+                let nbTries = 5;
+                while (true)
+                {
+                    try
+                    {
+                        await this.#downloadPageInternalAsync(i, i * 100 / maxNbOfPage);
+                        break;
+                    }
+                    catch (error: any)
+                    {
+                        if (nbTries > 0)
+                        {
+                            console.warn("Error while downloading your file: " + error + ", tries remaining: " + nbTries);
+                            nbTries--;
+                        }
+                        else
+                        {
+                            throw error;
+                        }
+                    }
+                }
                 if (this.isAwaitingAbort) {
                     throw "Download was aborted";
                 }
