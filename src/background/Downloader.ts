@@ -75,7 +75,7 @@ export default class Downloader
                     {
                         if (nbTries > 0)
                         {
-                            console.warn("Error while downloading your file: " + error + ", tries remaining: " + nbTries);
+                            console.warn("Error while downloading " + this.#doujinshiName + "/" + (i + 1) + ": " + error + ", tries remaining: " + nbTries);
                             nbTries--;
                         }
                         else
