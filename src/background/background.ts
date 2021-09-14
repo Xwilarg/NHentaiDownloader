@@ -108,7 +108,8 @@ module background
                     title = tmp;
                     names.push(title);
                 }
-                currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key], zip,
+                currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key],
+                downloadSeparately ? new JSZip() : zip, // If we download separately, we make sure to not reuse the previous ZIP
                 (downloadSeparately || (downloadAtEnd && i == length - 1)) ? finalName : null);
                 // We download the ZIP file in the following cases:
                 // downloadSeparately is true (set in extension options)
