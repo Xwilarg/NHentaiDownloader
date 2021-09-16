@@ -17,13 +17,7 @@ You can either go on a doujinshi page to download it, or go to a page containing
 - Go inside the folder of the extension and press "Select a folder"
 
 ### Firefox
-**There is currently an issue on Firefox where the extension fails to download anything with no error, since it seems to happen in a library I'm using and I have no clue why, I won't be fixing it for now** 
-<del>
-- First latest version of the extension on the [release page](https://github.com/Xwilarg/NHentaiDownloader/releases) (don't download the source code, you only need NHentaiDownloader.zip), unzip it somewhere in your computer
-- Write about:debugging#/runtime/this-firefox in your address bar
-- Press the "Load Temporary Add-on" button
-- Go inside the folder of the extension and select "manifest_firefox.json"
-</del>
+**There is currently an issue on Firefox where the extension fails to download anything with no error, since it seems to happen in a library I'm using and I have no clue why, I won't be fixing it for now**
 
 ## A quick note about the Chrome store
 
