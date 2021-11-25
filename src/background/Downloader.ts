@@ -144,6 +144,8 @@ export default class Downloader
             case "g":
                 format = ".gif";
                 break;
+            case "0": // Invalid page, probably an issue on NHentai side
+                return;
             default:
                 throw "Unknown page format " + page.t;
         }
