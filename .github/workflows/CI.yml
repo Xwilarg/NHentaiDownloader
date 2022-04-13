@@ -26,6 +26,6 @@ jobs:
     - run: cp -r css build && cp -r js build && cp Icon* build && cp manifest.json build && cp *.html build
     - uses: actions/upload-artifact@v2
       with:
-        name: NHentaiDownloader.zip
+        name: NHentaiDownloader
         path: ./build
         retention-days: 2
