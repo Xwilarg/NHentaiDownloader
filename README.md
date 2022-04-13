@@ -1,5 +1,5 @@
 # NHentaiDownloader
-A chrome extension to download doujinshi from NHentai
+An extension to download doujinshi from NHentai
 
 NHentai only allow to download doujinshi in .torrent format so I created this extension allowing to download them either in ZIP, CBZ or raw format.<br/>
 You can either go on a doujinshi page to download it, or go to a page containing many of them to download them all at once.
@@ -10,14 +10,20 @@ You can either go on a doujinshi page to download it, or go to a page containing
 ## How to install the extension from Release page
 
 ### Chrome
-- First latest version of the extension on the [release page](https://github.com/Xwilarg/NHentaiDownloader/releases) (don't download the source code, you only need NHentaiDownloader.zip), unzip it somewhere in your computer
-- Write chrome://extensions/ in your address bar
+- First latest version of the extension on the [release page](https://github.com/Xwilarg/NHentaiDownloader/releases) (don't download the source code, you only need NHentaiDownloader.zip)
+- Write `chrome://extensions/` in your address bar
 - Enable the developer mode (top right corner of the page)
-- Press the "Load Unpacked" button (top left corner of the page)
-- Go inside the folder of the extension and press "Select a folder"
+- Press the `Load Unpacked` button (top left corner of the page)
+- Go inside the folder of the extension and press `Select a folder`
 
 ### Firefox
-**There is currently an issue on Firefox where the extension fails to download anything with no error, since it seems to happen in a library I'm using and I have no clue why, I won't be fixing it for now**
+- First latest version of the extension on the [release page](https://github.com/Xwilarg/NHentaiDownloader/releases) (don't download the source code, you only need NHentaiDownloader.zip), unzip it somewhere in your computer
+- Write `about:debugging` in your address bar
+- At the left, press `This Firefox`
+- Click on `Load Temporary Add-on...`
+- Select NHentaiDownloader.zip
+
+Due to restrictions about unsigned extensions, you'll have to do that again everytimes you restart your browser
 
 ## A quick note about the Chrome store
 
