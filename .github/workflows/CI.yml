@@ -21,3 +21,11 @@ jobs:
         node-version: 14.x
     - run: npm install
     - run: npm test
+    - run: npm run build
+    - run: mkdir build
+    - run: cp css build && cp js build && cp Icon* build && cp manifest.json build && cp *.html build
+    - uses: actions/upload-artifact@v2
+      with:
+        name: NHentaiDownloader.zip
+        path: ./build
+        retention-days: 2
