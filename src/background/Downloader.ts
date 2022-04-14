@@ -175,7 +175,7 @@ export default class Downloader
         } else { // We don't need to update progress here because it go too fast anyway (since it just need to launch download)
             chrome.downloads.download({
                 url: 'https://i.nhentai.net/galleries/' + this.#mediaId + '/' + filenameParsing,
-                filename: './' + this.path + filename
+                filename: this.path.replace(/[\\\\\\/:"*?<>|]/g, '') + "-" + filename
             }, function(downloadId) {
                 if (downloadId === undefined) {
                     throw "Failed to download doujinshi page (" + chrome.runtime.lastError + "), if the error persist please report it.";
