@@ -24,7 +24,9 @@ export default class Downloader
     }
 
     updateProgress(progress: number, name: string | null, isZipping: boolean) {
-        this.progressCallback(progress, name, isZipping);
+        try {
+            this.progressCallback(progress, name, isZipping);
+        } catch (e) { } // Dead object
         this.#progressPercent = progress;
         this.#progressName = name;
         this.#progressZipping = isZipping;
