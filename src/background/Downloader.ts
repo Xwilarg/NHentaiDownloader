@@ -98,17 +98,21 @@ export default class Downloader
                     this.updateProgress(0, "in progress...", true);
 
                     let self = this;
-                    this.#zip.generateAsync({type: "blob"}, function(elem: any) {
-                        try {
-                            self.updateProgress(elem.percent, elem.currentFile == null ? self.path : elem.currentFile, true);
-                        } catch (e) { } // Dead object
-                    })
-                    .then(function(content: any) { // Zipping done
-                        self.currentProgress = 100;
-                        fileSaver.saveAs(content, self.downloadName + "." + self.useZip);
-                        try {
-                            self.updateProgress(100, null, true); // Notify popup that we are done
-                        } catch (e) { } // Dead object
+                    await new Promise((resolve, _reject) => {
+                        resolve(
+                            this.#zip.generateAsync({ type: "blob" }, function (elem: any) {
+                                try {
+                                    self.updateProgress(elem.percent, elem.currentFile == null ? self.path : elem.currentFile, true);
+                                } catch (e) { } // Dead object
+                            })
+                                .then(function (content: any) { // Zipping done
+                                    self.currentProgress = 100;
+                                    fileSaver.saveAs(content, self.downloadName + "." + self.useZip);
+                                    try {
+                                        self.updateProgress(100, null, true); // Notify popup that we are done
+                                    } catch (e) { } // Dead object
+                                })
+                        );
                     });
                 } else {
                     this.currentProgress = 100;
