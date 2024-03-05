@@ -10,19 +10,21 @@
   "icons": {
     "64": "Icon.png"
   },
-  "browser_action": {
+  "action": {
     "default_popup": "index.html"
   },
   "permissions": [
     "downloads",
     "tabs",
-    "https://nhentai.net/*",
-    "https://i.nhentai.net/*",
     "storage"
+  ],
+  "host_permissions": [
+    "https://nhentai.net/*",
+    "https://i.nhentai.net/*"
   ],
   "author": "Xwilarg",
   "background": {
-    "scripts": ["js/background.js"]
+    "service_worker": "js/background.js"
   },
   "options_ui": {
     "page": "options.html",
@@ -35,5 +37,5 @@
     "css" : ["css/content.css"],
     "js": ["js/content.js"]
   }],
-  "manifest_version": 2
+  "manifest_version": 3
 }

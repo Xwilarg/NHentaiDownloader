@@ -23,9 +23,9 @@ chrome.tabs.onActivated.addListener(function() {
 
 function setIcon(url: string) {
     if (url.startsWith("https://nhentai.net"))
-        chrome.browserAction.setIcon({path: "Icon.png"});
+        chrome.action.setIcon({path: "Icon.png"});
     else
-        chrome.browserAction.setIcon({path: "Icon-grey.png"});
+        chrome.action.setIcon({path: "Icon-grey.png"});
 }
 
 module background
@@ -207,15 +207,9 @@ module background
     }
 }
 
-// @ts-ignore
-window.isDownloadFinished = background.isDownloadFinished;
-// @ts-ignore
-window.downloadDoujinshi = background.downloadDoujinshi;
-// @ts-ignore
-window.downloadAllDoujinshis = background.downloadAllDoujinshis;
-// @ts-ignore
-window.goBack = background.goBack;
-// @ts-ignore
-window.updateProgress = background.updateProgress;
-// @ts-ignore
-window.downloadAllPages = background.downloadAllPages;
+export const isDownloadFinished = background.isDownloadFinished;
+export const downloadDoujinshi = background.downloadDoujinshi;
+export const downloadAllDoujinshis = background.downloadAllDoujinshis;
+export const goBack = background.goBack;
+export const updateProgress = background.updateProgress;
+export const downloadAllPages = background.downloadAllPages;
