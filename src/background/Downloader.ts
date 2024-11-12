@@ -150,6 +150,9 @@ export default class Downloader
             case "g":
                 format = ".gif";
                 break;
+            case "w":
+                format = ".webp";
+                break;
             case "0": // Invalid page, probably an issue on NHentai side
                 return;
             default:
