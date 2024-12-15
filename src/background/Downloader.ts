@@ -164,7 +164,7 @@ export default class Downloader
         let filename = this.#getNumberWithZeros(currPage + 1) + format; // Final file name
 
         if (this.useZip !== "raw") { // ZIP (or equivalent) format
-            const resp = await fetch('https://i.nhentai.net/galleries/' + this.#mediaId + '/' + filenameParsing);
+            const resp = await fetch('https://i1.nhentai.net/galleries/' + this.#mediaId + '/' + filenameParsing);
             if (resp.ok)
             {
                 let blob = await resp.blob();
@@ -183,7 +183,7 @@ export default class Downloader
             }
         } else { // We don't need to update progress here because it go too fast anyway (since it just need to launch download)
             chrome.downloads.download({
-                url: 'https://i.nhentai.net/galleries/' + this.#mediaId + '/' + filenameParsing,
+                url: 'https://i1.nhentai.net/galleries/' + this.#mediaId + '/' + filenameParsing,
                 filename: this.path.replace(/[\\\\\\/:"*?<>|]/g, '') + "-" + filename
             }, function(downloadId) {
                 if (downloadId === undefined) {
