@@ -1,5 +1,12 @@
+h3 {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
 html {
-    width: max-content;
+    width: 500px;
+    text-align: center;
 }
 
 #htmlLight {
@@ -31,10 +38,15 @@ html {
     background-color: #888;
 }
 
-#center {
-    text-align: center;
-}
-
 #progressBar {
     width: 100%;
+}
+
+input[type="button"] {
+    border-radius: 5px;
+}
+
+input[type="button"]:hover {
+    color: #e31b53;
+    background-color: white;
 }

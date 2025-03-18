@@ -9,7 +9,7 @@ export default class Select implements AOption
     init(elems: any): void {
         let select = document.getElementById(this.#id) as HTMLSelectElement;
         for (var i, j = 0; i = select.options[j]; j++) {
-            if (i.value == elems.useZip) {
+            if (i.value == elems[this.#id]) {
                 select.selectedIndex = j;
                 break;
             }

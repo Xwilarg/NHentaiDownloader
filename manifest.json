@@ -5,7 +5,7 @@
     }
   },
   "name": "NHentai Downloader",
-  "version": "2.1.7",
+  "version": "2.1.10",
   "description": "A chrome extension to download doujinshi from NHentai",
   "icons": {
     "64": "Icon.png"
@@ -20,7 +20,10 @@
   ],
   "host_permissions": [
     "https://nhentai.net/*",
-    "https://i.nhentai.net/*"
+    "https://i1.nhentai.net/*",
+    "https://i2.nhentai.net/*",
+    "https://i3.nhentai.net/*",
+    "https://i4.nhentai.net/*"
   ],
   "author": "Xwilarg",
   "background": {

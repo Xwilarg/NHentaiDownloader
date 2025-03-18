@@ -146,7 +146,7 @@ export default class Popup
         let nbDownload = 0;
         let currPage = 0;
         let maxPage = 0;
-        let html =  '<h3 id="center">' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
+        let html =  '<h3>' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
         + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><br/><input type="button" id="button" value="Download"/>';
         let lastMatch = /page=([0-9]+)" class="last">/.exec(pageHtml) // Get the number of pages
         if (lastMatch !== null) {
