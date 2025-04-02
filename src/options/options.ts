@@ -10,7 +10,8 @@ let options = [
     new Select("duplicateBehaviour"),
     new CheckBox("downloadSeparately"),
     new CheckBox("replaceSpaces"),
-    new CheckBox("htmlParsing")
+    new CheckBox("htmlParsing"),
+    new Select("maxConcurrentDownloads")
 ]
 
 chrome.storage.sync.get({
@@ -21,7 +22,8 @@ chrome.storage.sync.get({
     darkMode: false,
     replaceSpaces: true,
     htmlParsing: false,
-    downloadSeparately: false
+    downloadSeparately: false,
+    maxConcurrentDownloads: "3"
 }, function(elems) {
     options.forEach(o => {
         o.init(elems);

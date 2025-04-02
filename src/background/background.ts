@@ -33,7 +33,8 @@ module background
     let currentDownloader: Downloader | null = null;
     let parsing: AParsing;
     chrome.storage.sync.get({
-        htmlParsing: false
+        htmlParsing: false,
+        maxConcurrentDownloads: "3"
     }, function(elems) {
         if (elems.htmlParsing) {
             parsing = new HtmlParsing();
@@ -75,7 +76,8 @@ module background
                     downloadName: "{pretty}",
                     duplicateBehaviour: "remove",
                     replaceSpaces: true,
-                    downloadSeparately: false
+                    downloadSeparately: false,
+                    maxConcurrentDownloads: "3"
                 }, function(elems) {
                     downloadName = elems.downloadName;
                     duplicateBehaviour = elems.duplicateBehaviour;
@@ -146,7 +148,8 @@ module background
         await new Promise((resolve, _reject) => {
             resolve(
                 chrome.storage.sync.get({
-                    downloadName: "{pretty}"
+                    downloadName: "{pretty}",
+                    maxConcurrentDownloads: "3"
                 }, function(elems) {
                     downloadName = elems.downloadName;
                 })
@@ -219,3 +222,80 @@ window.goBack = background.goBack;
 window.updateProgress = background.updateProgress;
 // @ts-ignore
 window.downloadAllPages = background.downloadAllPages;
+
+// Add message listeners for Firefox private mode compatibility
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "isDownloadFinished") {
+        sendResponse({ result: background.isDownloadFinished() });
+    } else if (request.action === "downloadDoujinshi") {
+        background.downloadDoujinshi(
+            request.json,
+            request.path,
+            (error: string) => {
+                chrome.runtime.sendMessage({ action: "downloadError", error: error });
+            },
+            (progress: number, doujinshiName: string, isZipping: boolean) => {
+                chrome.runtime.sendMessage({
+                    action: "updateProgress",
+                    progress: progress,
+                    doujinshiName: doujinshiName,
+                    isZipping: isZipping
+                });
+            },
+            request.name
+        );
+        sendResponse({ result: "started" });
+    } else if (request.action === "downloadAllDoujinshis") {
+        background.downloadAllDoujinshis(
+            request.allDoujinshis,
+            request.finalName,
+            (error: string) => {
+                chrome.runtime.sendMessage({ action: "downloadError", error: error });
+            },
+            (progress: number, doujinshiName: string, isZipping: boolean) => {
+                chrome.runtime.sendMessage({
+                    action: "updateProgress",
+                    progress: progress,
+                    doujinshiName: doujinshiName,
+                    isZipping: isZipping
+                });
+            }
+        );
+        sendResponse({ result: "started" });
+    } else if (request.action === "downloadAllPages") {
+        background.downloadAllPages(
+            request.allDoujinshis,
+            request.pages,
+            request.finalName,
+            (error: string) => {
+                chrome.runtime.sendMessage({ action: "downloadError", error: error });
+            },
+            (progress: number, doujinshiName: string, isZipping: boolean) => {
+                chrome.runtime.sendMessage({
+                    action: "updateProgress",
+                    progress: progress,
+                    doujinshiName: doujinshiName,
+                    isZipping: isZipping
+                });
+            },
+            request.url
+        );
+        sendResponse({ result: "started" });
+    } else if (request.action === "goBack") {
+        background.goBack();
+        sendResponse({ result: "success" });
+    } else if (request.action === "updateProgress") {
+        // This is handled differently since we need to pass a callback
+        // The actual progress updates will be sent via messages
+        background.updateProgress((progress: number, doujinshiName: string, isZipping: boolean) => {
+            chrome.runtime.sendMessage({
+                action: "updateProgress",
+                progress: progress,
+                doujinshiName: doujinshiName,
+                isZipping: isZipping
+            });
+        });
+        sendResponse({ result: "success" });
+    }
+    return true; // Required for async response
+});

@@ -42,9 +42,11 @@ export default class Downloader
         await new Promise((resolve, _reject) => {
             resolve(
                 chrome.storage.sync.get({
-                    useZip: "zip"
+                    useZip: "zip",
+                    maxConcurrentDownloads: "3"
                 }, function(elems) {
                     self.useZip = elems.useZip;
+                    self.maxConcurrentDownloads = parseInt(elems.maxConcurrentDownloads);
                     if (self.useZip === "raw") {
                         self.currentProgress = 100;
                         try {
@@ -63,29 +65,40 @@ export default class Downloader
         {
             // Downloading
             let maxNbOfPage = this.#json.images.pages.length;
-            for (let i = 0; i < maxNbOfPage; i++)
-            {
+
+            // Use concurrent downloads based on the maxConcurrentDownloads setting
+            const downloadPage = async (i: number) => {
                 let nbTries = 5;
-                while (true)
-                {
-                    try
-                    {
+                while (true) {
+                    try {
                         await this.#downloadPageInternalAsync(i, i * 100 / maxNbOfPage);
                         break;
-                    }
-                    catch (error: any)
-                    {
-                        if (nbTries > 0)
-                        {
+                    } catch (error: any) {
+                        if (nbTries > 0) {
                             console.warn("Error while downloading " + this.#doujinshiName + "/" + (i + 1) + ": " + error + ", tries remaining: " + nbTries);
                             nbTries--;
-                        }
-                        else
-                        {
+                        } else {
                             throw error;
                         }
                     }
                 }
+                if (this.isAwaitingAbort) {
+                    throw "Download was aborted";
+                }
+            };
+
+            // Process pages in batches based on maxConcurrentDownloads
+            for (let i = 0; i < maxNbOfPage; i += this.maxConcurrentDownloads) {
+                const downloadPromises = [];
+
+                // Create a batch of download promises
+                for (let j = 0; j < this.maxConcurrentDownloads && i + j < maxNbOfPage; j++) {
+                    downloadPromises.push(downloadPage(i + j));
+                }
+
+                // Wait for all downloads in this batch to complete
+                await Promise.all(downloadPromises);
+
                 if (this.isAwaitingAbort) {
                     throw "Download was aborted";
                 }
@@ -99,8 +112,19 @@ export default class Downloader
 
                     let self = this;
                     await new Promise((resolve, _reject) => {
+                        // Use web workers for faster zipping if available
+                        const zipOptions = {
+                            type: "blob",
+                            // Use web workers for better performance if supported
+                            streamFiles: false,
+                            compression: "DEFLATE",
+                            compressionOptions: { level: 5 }, // Balance between speed and compression
+                            // Use web workers for parallel processing if available
+                            worker: true
+                        };
+
                         resolve(
-                            this.#zip.generateAsync({ type: "blob" }, function (elem: any) {
+                            this.#zip.generateAsync(zipOptions, function (elem: any) {
                                 try {
                                     self.updateProgress(elem.percent, elem.currentFile == null ? self.path : elem.currentFile, true);
                                 } catch (e) { } // Dead object
@@ -162,7 +186,7 @@ export default class Downloader
         this.updateProgress(progress, this.#doujinshiName + "/" + filenameParsing, false);
 
         let filename = this.#getNumberWithZeros(currPage + 1) + format; // Final file name
-		
+
         let imageserverID = Math.floor(Math.random() * 4) + 1; // Pick a random image server ID 1-4
         let imageserverURL = `https://i${imageserverID}.nhentai.net/galleries/`; // Image server from which to download from
 
@@ -202,6 +226,7 @@ export default class Downloader
     }
 
     useZip: string; // How data must be downloaded
+    maxConcurrentDownloads: number = 3; // Number of concurrent downloads
     #json: any; // JSON containing all data
     #zip: typeof JSZip; // ZIP data that will be downloaded at the end
     downloadName: string | null; // Name of the ZIP, null if should not download

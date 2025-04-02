@@ -27,11 +27,15 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                     lastUrl: currUrl
                 });
             }
-            if (!(chrome.extension.getBackgroundPage() as any).isDownloadFinished()) {
-                (chrome.extension.getBackgroundPage() as any).updateProgress(popup.updateProgress);
-                return;
-            }
-            popup.updatePreviewAsync(currUrl);
+            // Use message passing instead of direct background page access for Firefox private mode compatibility
+            chrome.runtime.sendMessage({ action: "isDownloadFinished" }, function(response) {
+                if (!response.result) {
+                    chrome.runtime.sendMessage({ action: "updateProgress" });
+                    return;
+                }
+                popup.updatePreviewAsync(currUrl);
+            });
+            return; // Early return as we're handling the async response above
         });
     });
 });
