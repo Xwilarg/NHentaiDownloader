@@ -2,6 +2,16 @@ import AParsing from "../parsing/AParsing";
 import { utils } from "../utils/utils";
 import { message } from "./message"
 
+// Add message listener for progress updates and error messages
+chrome.runtime.onMessage.addListener(function(request) {
+    if (request.action === "updateProgress") {
+        Popup.getInstance().updateProgress(request.progress, request.doujinshiName, request.isZipping);
+    } else if (request.action === "downloadError") {
+        document.getElementById('action')!.innerHTML = 'An error occured while downloading the doujinshi: <b>' + request.error + '</b>';
+    }
+    return true;
+});
+
 export default class Popup
 {
     //#region "singleton"
@@ -19,16 +29,35 @@ export default class Popup
     updateProgress(progress: number, doujinshiName: string, isZipping: boolean) {
         if (isZipping && progress == 100) { // File is being downloaded
             document.getElementById('action')!.innerHTML = message.downloadDone();
-        } else { // Download done
+            // Add event listener after updating the HTML content
+            setTimeout(() => {
+                const buttonBack = document.getElementById('buttonBack');
+                if (buttonBack) {
+                    buttonBack.addEventListener('click', function() {
+                        let popup = Popup.getInstance();
+                        // Use message passing instead of direct background page access for Firefox private mode compatibility
+                        chrome.runtime.sendMessage({ action: "goBack" }, function() {
+                            popup.updatePreviewAsync(popup.url);
+                        });
+                    });
+                }
+            }, 0);
+        } else { // Download in progress
             document.getElementById('action')!.innerHTML = message.downloadProgress(isZipping ? "Zipping" : "Downloading", doujinshiName, progress);
+            // Add event listener after updating the HTML content
+            setTimeout(() => {
+                const buttonBack = document.getElementById('buttonBack');
+                if (buttonBack) {
+                    buttonBack.addEventListener('click', function() {
+                        let popup = Popup.getInstance();
+                        // Use message passing instead of direct background page access for Firefox private mode compatibility
+                        chrome.runtime.sendMessage({ action: "goBack" }, function() {
+                            popup.updatePreviewAsync(popup.url);
+                        });
+                    });
+                }
+            }, 0);
         }
-
-        document.getElementById('buttonBack')!.addEventListener('click', function()
-        {
-            let popup = Popup.getInstance();
-            (chrome.extension.getBackgroundPage() as any).goBack();
-            popup.updatePreviewAsync(popup.url);
-        });
     }
 
     // #region "single download"
@@ -75,13 +104,22 @@ export default class Popup
                 document.getElementById('action')!.innerHTML = message.downloadInfo(title, json.images.pages.length, extension);
                 (document.getElementById('path') as HTMLInputElement).value = utils.cleanName(title, elems.replaceSpaces);
 
-                document.getElementById('button')!.addEventListener('click', function()
-                {
-                    (chrome.extension.getBackgroundPage() as any).downloadDoujinshi(json, (document.getElementById('path') as HTMLInputElement).value, function(error: string) {
-                        document.getElementById('action')!.innerHTML = message.errorDownload(error);
-                    }, self.updateProgress, title);
-                    self.updateProgress(0, title, false);
-                });
+                // Add event listener after updating the HTML content
+                setTimeout(() => {
+                    const button = document.getElementById('button');
+                    if (button) {
+                        button.addEventListener('click', function() {
+                            // Use message passing instead of direct background page access for Firefox private mode compatibility
+                            chrome.runtime.sendMessage({
+                                action: "downloadDoujinshi",
+                                json: json,
+                                path: (document.getElementById('path') as HTMLInputElement).value,
+                                name: title
+                            });
+                            self.updateProgress(0, title, false);
+                        });
+                    }
+                }, 0);
             });
         }
     }
@@ -166,126 +204,175 @@ export default class Popup
             });
         }
 
-        // Invert all checkbox
-        document.getElementById('invert')!.addEventListener('click', function()
-        {
-            let storageAllIds;
-            chrome.storage.local.get({
-                allIds: []
-            }, function(elemsLocal) {
-                // Iterate on all checkboxs and reverse the value
-                storageAllIds = elemsLocal.allIds;
-                for (let i = 0; i < allIds.length; i++) {
-                    let id = allIds[i];
-                    let elem = (document.getElementById(id) as HTMLInputElement);
-                    elem.checked = !elem.checked;
-                    storageAllIds = self.#saveIdInLocalStorage(id, storageAllIds, elem.checked);
-                }
-                chrome.storage.local.set({
-                    allIds: storageAllIds
-                });
-                // @ts-ignore
-                chrome.tabs.executeScript(null, {
-                    file: "js/updateContent.js" // Update the checkboxs of the page
-                });
-            });
-        });
-
-        // Clear all checkboxs
-        document.getElementById('remove')!.addEventListener('click', function()
-        {
-            // Just uncheck everything and empty local storage
-            allIds.forEach(function(id) {
-                (document.getElementById(id) as HTMLInputElement).checked = false;
-            });
-            chrome.storage.local.set({
-                allIds: []
-            });
-            // @ts-ignore
-            chrome.tabs.executeScript(null, {
-                file: "js/updateContent.js" // Update the checkboxs of the page
-            });
-        });
-
-        // Download button
-        document.getElementById('button')!.addEventListener('click', function()
-        {
-            let allDoujinshis : Record<string, string> = {};
-            allIds.forEach(function(id) {
-                let elem = document.getElementById(id) as HTMLInputElement;
-                if (elem.checked) {
-                    allDoujinshis[id] = elem.name;
-                }
-            });
-            if (Object.keys(allDoujinshis).length > 0) { // There is at least one element selected, we launch download
-                let finalName = (document.getElementById('path') as HTMLInputElement).value;
-                (chrome.extension.getBackgroundPage() as any).downloadAllDoujinshis(allDoujinshis, finalName, function(error: string) {
-                    document.getElementById('action')!.innerHTML = message.errorDownload(error);
-                }, Popup.getInstance().updateProgress);
-                self.updateProgress(0, finalName, false);
-            } else {
-                document.getElementById('action')!.innerHTML = "You must select at least one element to download.";
-            }
-        });
-
-        if (nbDownload > 0) {
-            // User input saying how many pages he wants to download
-            document.getElementById('downloadInput')!.addEventListener('change', function() {
-                let pages = self.#parseDownloadAll(maxPage);
-                if (pages.length !== 0) {
-                    (document.getElementById("buttonAll") as HTMLInputElement).value = 'Download all (' + pages.length + ' pages)';
-                }
-            });
-
-            // Download many pages at once
-            document.getElementById('buttonAll')!.addEventListener('click', function()
-            {
-                let allDoujinshis : Record<string, string> = {};
-                allIds.forEach(function(id) {
-                    let elem = (document.getElementById(id) as HTMLInputElement);
-                    allDoujinshis[id] = elem.name;
-                });
-                let pages = self.#parseDownloadAll(maxPage);
-                if (typeof pages === "string") {
-                    alert(pages);
-                    (document.getElementById('downloadInput') as HTMLInputElement).value = currPage + "-" + nbDownload;
-                } else {
-                    let choice = confirm("You are going to download " + pages.length + " pages of doujinshi. Are you sure you want to continue?");
-                    if (choice) {
-                        let finalName = (document.getElementById('path') as HTMLInputElement).value;
-                        (chrome.extension.getBackgroundPage() as any).downloadAllPages(allDoujinshis, pages, finalName, function(error: string) {
-                            document.getElementById('action')!.innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
-                        }, self.updateProgress, self.url);
-                        self.updateProgress(0, finalName, false);
-                    }
-                }
-            });
-        }
-
-        // We listen to all checkboxs on the page
-        allIds.forEach(function(id) {
-            (document.getElementById(id) as HTMLInputElement).addEventListener('change', function() {
-                let checked = this.checked;
-                chrome.storage.local.get({
-                    allIds: []
-                }, function(elemsLocal) { // Add the ids in local storage so we can easily find them back from anywhere (even if page is reloaded etc)
-                    chrome.storage.local.set({
-                        allIds: self.#saveIdInLocalStorage(id, elemsLocal.allIds, checked)
+        // Invert all checkbox - add event listener after updating the HTML content
+        setTimeout(() => {
+            const invertButton = document.getElementById('invert');
+            if (invertButton) {
+                invertButton.addEventListener('click', function() {
+                    let storageAllIds;
+                    chrome.storage.local.get({
+                        allIds: []
+                    }, function(elemsLocal) {
+                        // Iterate on all checkboxs and reverse the value
+                        storageAllIds = elemsLocal.allIds;
+                        for (let i = 0; i < allIds.length; i++) {
+                            let id = allIds[i];
+                            let elem = (document.getElementById(id) as HTMLInputElement);
+                            elem.checked = !elem.checked;
+                            storageAllIds = self.#saveIdInLocalStorage(id, storageAllIds, elem.checked);
+                        }
+                        chrome.storage.local.set({
+                            allIds: storageAllIds
+                        });
+                        // @ts-ignore
+                        chrome.tabs.executeScript(null, {
+                            file: "js/updateContent.js" // Update the checkboxs of the page
+                        });
                     });
                 });
-                // @ts-ignore
-                chrome.tabs.executeScript(null, {
-                    file: "js/updateContent.js" // Update the checkboxs of the page
+            }
+        }, 0);
+
+        // Clear all checkboxs - add event listener after updating the HTML content
+        setTimeout(() => {
+            const removeButton = document.getElementById('remove');
+            if (removeButton) {
+                removeButton.addEventListener('click', function() {
+                    // Just uncheck everything and empty local storage
+                    allIds.forEach(function(id) {
+                        (document.getElementById(id) as HTMLInputElement).checked = false;
+                    });
+                    chrome.storage.local.set({
+                        allIds: []
+                    });
+                    // @ts-ignore
+                    chrome.tabs.executeScript(null, {
+                        file: "js/updateContent.js" // Update the checkboxs of the page
+                    });
                 });
-            });
-            chrome.storage.local.get({
-                allIds: []
-            }, function(elemsLocal) {
-                if (elemsLocal.allIds.includes(id)) {
-                    (document.getElementById(id) as HTMLInputElement).checked = true;
+            }
+        }, 0);
+
+        // Download button - add event listener after updating the HTML content
+        setTimeout(() => {
+            const downloadButton = document.getElementById('button');
+            if (downloadButton) {
+                downloadButton.addEventListener('click', function() {
+                    let allDoujinshis : Record<string, string> = {};
+                    allIds.forEach(function(id) {
+                        let elem = document.getElementById(id) as HTMLInputElement;
+                        if (elem && elem.checked) {
+                            allDoujinshis[id] = elem.name;
+                        }
+                    });
+                    if (Object.keys(allDoujinshis).length > 0) { // There is at least one element selected, we launch download
+                        const pathElement = document.getElementById('path') as HTMLInputElement;
+                        if (pathElement) {
+                            let finalName = pathElement.value;
+                            // Use message passing instead of direct background page access for Firefox private mode compatibility
+                            chrome.runtime.sendMessage({
+                                action: "downloadAllDoujinshis",
+                                allDoujinshis: allDoujinshis,
+                                finalName: finalName
+                            });
+                            self.updateProgress(0, finalName, false);
+                        }
+                    } else {
+                        document.getElementById('action')!.innerHTML = "You must select at least one element to download.";
+                    }
+                });
+            }
+        }, 0);
+
+        if (nbDownload > 0) {
+            // User input saying how many pages he wants to download - add event listener after updating the HTML content
+            setTimeout(() => {
+                const downloadInput = document.getElementById('downloadInput');
+                if (downloadInput) {
+                    downloadInput.addEventListener('change', function() {
+                        let pages = self.#parseDownloadAll(maxPage);
+                        if (pages.length !== 0) {
+                            const buttonAll = document.getElementById("buttonAll") as HTMLInputElement;
+                            if (buttonAll) {
+                                buttonAll.value = 'Download all (' + pages.length + ' pages)';
+                            }
+                        }
+                    });
+                }
+            }, 0);
+
+            // Download many pages at once - add event listener after updating the HTML content
+            setTimeout(() => {
+                const buttonAll = document.getElementById('buttonAll');
+                if (buttonAll) {
+                    buttonAll.addEventListener('click', function() {
+                        let allDoujinshis : Record<string, string> = {};
+                        allIds.forEach(function(id) {
+                            let elem = (document.getElementById(id) as HTMLInputElement);
+                            if (elem) {
+                                allDoujinshis[id] = elem.name;
+                            }
+                        });
+                        let pages = self.#parseDownloadAll(maxPage);
+                        if (typeof pages === "string") {
+                            alert(pages);
+                            const downloadInput = document.getElementById('downloadInput') as HTMLInputElement;
+                            if (downloadInput) {
+                                downloadInput.value = currPage + "-" + nbDownload;
+                            }
+                        } else {
+                            let choice = confirm("You are going to download " + pages.length + " pages of doujinshi. Are you sure you want to continue?");
+                            if (choice) {
+                                const pathElement = document.getElementById('path') as HTMLInputElement;
+                                if (pathElement) {
+                                    let finalName = pathElement.value;
+                                    // Use message passing instead of direct background page access for Firefox private mode compatibility
+                                    chrome.runtime.sendMessage({
+                                        action: "downloadAllPages",
+                                        allDoujinshis: allDoujinshis,
+                                        pages: pages,
+                                        finalName: finalName,
+                                        url: self.url
+                                    });
+                                    self.updateProgress(0, finalName, false);
+                                }
+                            }
+                        }
+                    });
+                }
+            }, 0);
+        }
+
+        // We listen to all checkboxs on the page - add event listeners after updating the HTML content
+        setTimeout(() => {
+            allIds.forEach(function(id) {
+                const checkbox = document.getElementById(id) as HTMLInputElement;
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        let checked = this.checked;
+                        chrome.storage.local.get({
+                            allIds: []
+                        }, function(elemsLocal) { // Add the ids in local storage so we can easily find them back from anywhere (even if page is reloaded etc)
+                            chrome.storage.local.set({
+                                allIds: self.#saveIdInLocalStorage(id, elemsLocal.allIds, checked)
+                            });
+                        });
+                        // @ts-ignore
+                        chrome.tabs.executeScript(null, {
+                            file: "js/updateContent.js" // Update the checkboxs of the page
+                        });
+                    });
+
+                    chrome.storage.local.get({
+                        allIds: []
+                    }, function(elemsLocal) {
+                        if (elemsLocal.allIds.includes(id)) {
+                            checkbox.checked = true;
+                        }
+                    });
                 }
             });
-        });
+        }, 0);
     }
 
     #saveIdInLocalStorage(id: string, allIds: Array<string>, checked: boolean) {
