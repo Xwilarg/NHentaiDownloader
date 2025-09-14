@@ -23,9 +23,9 @@ chrome.tabs.onActivated.addListener(function() {
 
 function setIcon(url: string) {
     if (url.startsWith("https://nhentai.net"))
-        chrome.action.setIcon({path: "Icon.png"});
+        chrome.action.setIcon({path: "\\Icon.png"});
     else
-        chrome.action.setIcon({path: "Icon-grey.png"});
+        chrome.action.setIcon({path: "\\Icon-grey.png"});
 }
 
 module background
