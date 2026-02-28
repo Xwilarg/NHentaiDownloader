@@ -1,10 +1,8 @@
 var fileSaver = require("file-saver");
 var JSZip = require("jszip");
 
-export default class Downloader
-{
-    constructor(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string, zip: typeof JSZip, downloadName: string | null)
-    {
+export default class Downloader {
+    constructor(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string, zip: typeof JSZip, downloadName: string | null) {
         this.progressCallback = progressCallback;
         this.#errorCallback = errorCallback;
         this.currentProgress = 0;
@@ -43,7 +41,7 @@ export default class Downloader
             resolve(
                 chrome.storage.sync.get({
                     useZip: "zip"
-                }, function(elems) {
+                }, function (elems) {
                     self.useZip = elems.useZip;
                     if (self.useZip === "raw") {
                         self.currentProgress = 100;
@@ -59,29 +57,22 @@ export default class Downloader
     }
 
     async #downloadAsync() {
-        try
-        {
+        try {
             // Downloading
             let maxNbOfPage = this.#json.images.pages.length;
-            for (let i = 0; i < maxNbOfPage; i++)
-            {
+            for (let i = 0; i < maxNbOfPage; i++) {
                 let nbTries = 5;
-                while (true)
-                {
-                    try
-                    {
+                while (true) {
+                    try {
                         await this.#downloadPageInternalAsync(i, i * 100 / maxNbOfPage);
                         break;
                     }
-                    catch (error: any)
-                    {
-                        if (nbTries > 0)
-                        {
+                    catch (error: any) {
+                        if (nbTries > 0) {
                             console.warn("Error while downloading " + this.#doujinshiName + "/" + (i + 1) + ": " + error + ", tries remaining: " + nbTries);
                             nbTries--;
                         }
-                        else
-                        {
+                        else {
                             throw error;
                         }
                     }
@@ -120,8 +111,7 @@ export default class Downloader
                 }
             }
         }
-        catch (error)
-        {
+        catch (error) {
             this.currentProgress = 100;
             this.#errorCallback(error);
             throw error;
@@ -139,8 +129,7 @@ export default class Downloader
     async #downloadPageInternalAsync(currPage: number, progress: number) {
         let page = this.#json.images.pages[currPage];
         let format;
-        switch (page.t)
-        {
+        switch (page.t) {
             case "j":
                 format = ".jpg";
                 break;
@@ -162,14 +151,13 @@ export default class Downloader
         this.updateProgress(progress, this.#doujinshiName + "/" + filenameParsing, false);
 
         let filename = this.#getNumberWithZeros(currPage + 1) + format; // Final file name
-		
+
         let imageserverID = Math.floor(Math.random() * 4) + 1; // Pick a random image server ID 1-4
         let imageserverURL = `https://i${imageserverID}.nhentai.net/galleries/`; // Image server from which to download from
 
         if (this.useZip !== "raw") { // ZIP (or equivalent) format
-            const resp = await fetch(imageserverURL  + this.#mediaId + '/' + filenameParsing);
-            if (resp.ok)
-            {
+            const resp = await fetch(imageserverURL + this.#mediaId + '/' + filenameParsing);
+            if (resp.ok) {
                 let blob = await resp.blob();
                 await new Promise((resolve, reject) => {
                     var reader = new FileReader();
@@ -180,24 +168,22 @@ export default class Downloader
                     reader.readAsArrayBuffer(blob);
                 });
             }
-            else
-            {
+            else {
                 throw "Failed to fetch doujinshi page (status " + resp.status + ": " + resp.statusText + "), if the error persist please report it.";
             }
         } else { // We don't need to update progress here because it go too fast anyway (since it just need to launch download)
-            chrome.downloads.download({
+            let downloadId = await chrome.downloads.download({
                 url: imageserverURL + this.#mediaId + '/' + filenameParsing,
                 filename: this.path.replace(/[\\\\\\/:"*?<>|]/g, '') + "-" + filename
-            }, function(downloadId) {
-                if (downloadId === undefined) {
-                    throw "Failed to download doujinshi page (" + chrome.runtime.lastError + "), if the error persist please report it.";
-                }
             });
+            if (downloadId === undefined) {
+                let error = chrome.runtime.lastError ? chrome.runtime.lastError.message : "unknown error";
+                throw "Failed to download doujinshi page (" + error + "), if the error persist please report it.";
+            }
         }
     }
 
-    isDone(): boolean
-    {
+    isDone(): boolean {
         return this.currentProgress === 100;
     }
 
