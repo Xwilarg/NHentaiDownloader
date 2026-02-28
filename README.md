@@ -1,11 +1,9 @@
 # NHentaiDownloader
 An extension to download doujinshi from NHentai
 
-NHentai only allow to download doujinshi in .torrent format so I created this extension allowing to download them either in ZIP, CBZ or raw format.<br/>
+NHentai only allows to download doujinshi in .torrent format so I made this extension (with the help of [others amazing contributors](https://github.com/Xwilarg/NHentaiDownloader/graphs/contributors)) allowing to download them directly in ZIP, CBZ or raw format.<br/>
 You can either go on a doujinshi page to download it, or go to a page containing many of them to download them all at once.
 <br/><br/>
-
-[![CI](https://github.com/Xwilarg/NHentaiDownloader/workflows/CI/badge.svg)](https://github.com/Xwilarg/NHentaiDownloader/actions)
 
 ## 403 errors
 
@@ -14,7 +12,7 @@ There is not much I can do for that, it indeed probably mean that bulk download 
 
 My advices on that:
  - Try to download again while being logged-in
- - Try to download again using a VPN
+ - Try to download again using/without a VPN
 
 ## How to install the extension from Release page
 
