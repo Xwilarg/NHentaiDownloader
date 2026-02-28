@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: latest
     - run: npm install
@@ -24,7 +24,7 @@ jobs:
     - run: npm run build
     - run: mkdir build
     - run: cp -r css build && cp -r js build && cp Icon* build && cp manifest.json build && cp *.html build
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v6
       with:
         name: NHentaiDownloader
         path: ./build
