@@ -7,12 +7,12 @@ var JSZip = require("jszip");
 
 chrome.tabs.onUpdated.addListener(function
     (_tabId, changeInfo, _tab) {
-        if (changeInfo.url !== undefined)
-            setIcon(changeInfo.url);
-    }
+    if (changeInfo.url !== undefined)
+        setIcon(changeInfo.url);
+}
 );
 
-chrome.tabs.onActivated.addListener(function() {
+chrome.tabs.onActivated.addListener(function () {
     chrome.tabs.query({
         active: true,
         currentWindow: true
@@ -23,13 +23,12 @@ chrome.tabs.onActivated.addListener(function() {
 
 function setIcon(url: string) {
     if (url.startsWith("https://nhentai.net"))
-        chrome.browserAction.setIcon({path: "Icon.png"});
+        chrome.action.setIcon({ path: "\\Icon.png" });
     else
-        chrome.browserAction.setIcon({path: "Icon-grey.png"});
+        chrome.action.setIcon({ path: "\\Icon-grey.png" });
 }
 
-module background
-{
+module background {
     let currentDownloader: Downloader | null = null;
     let parsing: AParsing;
     chrome.storage.sync.get({
@@ -93,8 +92,7 @@ module background
         for (let i = 0; i < length; i++) {
             let key = allKeys[i];
             const resp = await fetch(parsing.GetUrl(key));
-            if (resp.ok)
-            {
+            if (resp.ok) {
                 const json = await parsing.GetJsonAsync(resp);
 
                 let title = utils.getDownloadName(downloadName, json.title.pretty === "" ?
@@ -117,16 +115,15 @@ module background
                     zipName = finalName;
                 }
                 currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key],
-                downloadSeparately ? new JSZip() : zip, // If we download separately, we make sure to not reuse the previous ZIP
-                zipName);
+                    downloadSeparately ? new JSZip() : zip, // If we download separately, we make sure to not reuse the previous ZIP
+                    zipName);
                 // We download the ZIP file in the following cases:
                 // downloadSeparately is true (set in extension options)
                 // OR downloadAtEnd is true (can be false if downloading many pages) AND we are at the doujin of the current list
 
                 await currentDownloader.startAsync();
             }
-            else
-            {
+            else {
                 errorCallback("Can't download " + key + " (Code " + resp.status + ": " + resp.statusText + ").");
             }
         }
@@ -170,8 +167,7 @@ module background
                 url += "?page=" + curr
             }
             const resp = await fetch(url);
-            if (resp.ok)
-            {
+            if (resp.ok) {
                 const text = await resp.text();
                 allDoujinshis = {};
                 let matchs = /<a href="\/g\/([0-9]+)\/".+<div class="caption">([^<]+)((<br>)+<input [^>]+>[^<]+<br>[^<]+<br>[^<]+)?<\/div>/g
@@ -203,99 +199,46 @@ module background
     }
 
     export function updateProgress(updateCallback: Function) {
-        if (!isDownloadFinished())
-        {
+        if (!isDownloadFinished()) {
             currentDownloader!.updateProgressLatest(updateCallback);
         }
     }
 }
 
-// @ts-ignore
-window.isDownloadFinished = background.isDownloadFinished;
-// @ts-ignore
-window.downloadDoujinshi = background.downloadDoujinshi;
-// @ts-ignore
-window.downloadAllDoujinshis = background.downloadAllDoujinshis;
-// @ts-ignore
-window.goBack = background.goBack;
-// @ts-ignore
-window.updateProgress = background.updateProgress;
-// @ts-ignore
-window.downloadAllPages = background.downloadAllPages;
+export const isDownloadFinished = background.isDownloadFinished;
+export const downloadDoujinshi = background.downloadDoujinshi;
+export const downloadAllDoujinshis = background.downloadAllDoujinshis;
+export const goBack = background.goBack;
+export const updateProgress = background.updateProgress;
+export const downloadAllPages = background.downloadAllPages;
 
-// Add message listeners for Firefox private mode compatibility
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === "isDownloadFinished") {
-        sendResponse({ result: background.isDownloadFinished() });
-    } else if (request.action === "downloadDoujinshi") {
-        background.downloadDoujinshi(
-            request.json,
-            request.path,
-            (error: string) => {
-                chrome.runtime.sendMessage({ action: "downloadError", error: error });
-            },
-            (progress: number, doujinshiName: string, isZipping: boolean) => {
-                chrome.runtime.sendMessage({
-                    action: "updateProgress",
-                    progress: progress,
-                    doujinshiName: doujinshiName,
-                    isZipping: isZipping
-                });
-            },
-            request.name
-        );
-        sendResponse({ result: "started" });
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (request.action === "downloadDoujinshi") {
+        downloadDoujinshi(request.json, request.path, function (error: string) {
+            chrome.runtime.sendMessage({ action: "downloadError", error: error.toString() });
+        }, function (progress: number, doujinshiName: string, isZipping: boolean) {
+            chrome.runtime.sendMessage({ action: "updateProgress", progress: progress, doujinshiName: doujinshiName, isZipping: isZipping });
+        }, request.name);
     } else if (request.action === "downloadAllDoujinshis") {
-        background.downloadAllDoujinshis(
-            request.allDoujinshis,
-            request.finalName,
-            (error: string) => {
-                chrome.runtime.sendMessage({ action: "downloadError", error: error });
-            },
-            (progress: number, doujinshiName: string, isZipping: boolean) => {
-                chrome.runtime.sendMessage({
-                    action: "updateProgress",
-                    progress: progress,
-                    doujinshiName: doujinshiName,
-                    isZipping: isZipping
-                });
-            }
-        );
-        sendResponse({ result: "started" });
-    } else if (request.action === "downloadAllPages") {
-        background.downloadAllPages(
-            request.allDoujinshis,
-            request.pages,
-            request.finalName,
-            (error: string) => {
-                chrome.runtime.sendMessage({ action: "downloadError", error: error });
-            },
-            (progress: number, doujinshiName: string, isZipping: boolean) => {
-                chrome.runtime.sendMessage({
-                    action: "updateProgress",
-                    progress: progress,
-                    doujinshiName: doujinshiName,
-                    isZipping: isZipping
-                });
-            },
-            request.url
-        );
-        sendResponse({ result: "started" });
-    } else if (request.action === "goBack") {
-        background.goBack();
-        sendResponse({ result: "success" });
-    } else if (request.action === "updateProgress") {
-        // This is handled differently since we need to pass a callback
-        // The actual progress updates will be sent via messages
-        background.updateProgress((progress: number, doujinshiName: string, isZipping: boolean) => {
-            chrome.runtime.sendMessage({
-                action: "updateProgress",
-                progress: progress,
-                doujinshiName: doujinshiName,
-                isZipping: isZipping
-            });
+        downloadAllDoujinshis(request.allDoujinshis, request.finalName, function (error: string) {
+            chrome.runtime.sendMessage({ action: "downloadError", error: error.toString() });
+        }, function (progress: number, doujinshiName: string, isZipping: boolean) {
+            chrome.runtime.sendMessage({ action: "updateProgress", progress: progress, doujinshiName: doujinshiName, isZipping: isZipping });
         });
-        sendResponse({ result: "success" });
+    } else if (request.action === "downloadAllPages") {
+        downloadAllPages(request.allDoujinshis, request.pagesArr, request.path, function (error: string) {
+            chrome.runtime.sendMessage({ action: "downloadError", error: error.toString() });
+        }, function (progress: number, doujinshiName: string, isZipping: boolean) {
+            chrome.runtime.sendMessage({ action: "updateProgress", progress: progress, doujinshiName: doujinshiName, isZipping: isZipping });
+        }, request.url);
+    } else if (request.action === "goBack") {
+        goBack();
+    } else if (request.action === "checkDownload") {
+        sendResponse({ isDownloadFinished: isDownloadFinished() });
+        if (!isDownloadFinished()) {
+            updateProgress(function (progress: number, doujinshiName: string, isZipping: boolean) {
+                chrome.runtime.sendMessage({ action: "updateProgress", progress: progress, doujinshiName: doujinshiName, isZipping: isZipping });
+            });
+        }
     }
-    return true; // Required for async response
 });

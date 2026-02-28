@@ -24,6 +24,13 @@ html {
     margin-right: auto;
 }
 
+.sub-button {
+    border: none;
+    padding: 5px;
+    background-color: #c7c7c7;
+    margin: 5px;
+}
+
 #button, #buttonBack, #buttonAll{
     display: block;
     margin-left: auto;
@@ -32,6 +39,10 @@ html {
     color: white;
     border: none;
     padding: 15px 32px;
+}
+#button:hover, #buttonBack:hover, #buttonAll:hover{
+    background-color: transparent;
+    color: #e31b53;
 }
 
 #buttonAll {
@@ -49,4 +60,11 @@ input[type="button"] {
 input[type="button"]:hover {
     color: #e31b53;
     background-color: white;
+}
+
+.doujin-popup-list {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 2px;
 }
