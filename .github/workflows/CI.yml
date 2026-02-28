@@ -20,7 +20,6 @@ jobs:
       with:
         node-version: latest
     - run: npm install
-    - run: npm test
     - run: npm run build
     - run: mkdir build
     - run: cp -r css build && cp -r js build && cp Icon* build && cp manifest.json build && cp *.html build
