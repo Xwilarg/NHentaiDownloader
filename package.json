@@ -37,7 +37,6 @@
     "webpack-cli": "^4.8.0"
   },
   "dependencies": {
-    "file-saver": "2.0.5",
     "jszip": "3.9.1"
   }
 }

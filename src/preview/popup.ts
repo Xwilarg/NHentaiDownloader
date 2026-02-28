@@ -2,8 +2,7 @@ import AParsing from "../parsing/AParsing";
 import { utils } from "../utils/utils";
 import { message } from "./message"
 
-export default class Popup
-{
+export default class Popup {
     //#region "singleton"
     static getInstance(): Popup {
         if (Popup.#instance === null) {
@@ -23,10 +22,9 @@ export default class Popup
             document.getElementById('action')!.innerHTML = message.downloadProgress(isZipping ? "Zipping" : "Downloading", doujinshiName, progress);
         }
 
-        document.getElementById('buttonBack')!.addEventListener('click', function()
-        {
+        document.getElementById('buttonBack')!.addEventListener('click', function () {
             let popup = Popup.getInstance();
-            (chrome.extension.getBackgroundPage() as any).goBack();
+            chrome.runtime.sendMessage({ action: "goBack" });
             popup.updatePreviewAsync(popup.url);
         });
     }
@@ -39,12 +37,14 @@ export default class Popup
         if (match !== null) {
             await self.#doujinshiPreviewAsync(match[1]);
         } else if (self.url.startsWith("https://nhentai.net")) {
-            // @ts-ignore
-            chrome.tabs.executeScript(null, {
-                file: "js/getHtml.js" // Get the HTML of the page
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                chrome.scripting.executeScript({
+                    target: { tabId: tabs[0].id! },
+                    files: ["js/getHtml.js"] // Get the HTML of the page
+                });
             });
         } else {
-            document.getElementById('action')!.innerHTML =  message.invalidPage();
+            document.getElementById('action')!.innerHTML = message.invalidPage();
         }
     }
 
@@ -62,7 +62,7 @@ export default class Popup
                 useZip: "zip",
                 downloadName: "{pretty}",
                 replaceSpaces: true
-            }, function(elems) {
+            }, function (elems) {
                 let extension = "";
                 if (elems.useZip == "zip")
                     extension = ".zip";
@@ -75,11 +75,13 @@ export default class Popup
                 document.getElementById('action')!.innerHTML = message.downloadInfo(title, json.images.pages.length, extension);
                 (document.getElementById('path') as HTMLInputElement).value = utils.cleanName(title, elems.replaceSpaces);
 
-                document.getElementById('button')!.addEventListener('click', function()
-                {
-                    (chrome.extension.getBackgroundPage() as any).downloadDoujinshi(json, (document.getElementById('path') as HTMLInputElement).value, function(error: string) {
-                        document.getElementById('action')!.innerHTML = message.errorDownload(error);
-                    }, self.updateProgress, title);
+                document.getElementById('button')!.addEventListener('click', function () {
+                    chrome.runtime.sendMessage({
+                        action: "downloadDoujinshi",
+                        json: json,
+                        path: (document.getElementById('path') as HTMLInputElement).value,
+                        name: title
+                    });
                     self.updateProgress(0, title, false);
                 });
             });
@@ -102,7 +104,7 @@ export default class Popup
             match = matchs.exec(pageHtml);
             if (match !== null) {
                 let isChecked = false;
-                if (match[4] !== undefined ) {
+                if (match[4] !== undefined) {
                     // For each doujin, we check if our custom checkbox is ticked
                     var testMatch = pageHtml.match('<input id="' + match[1] + '" type="checkbox"( value="(true|false)")?>');
                     try {
@@ -137,8 +139,7 @@ export default class Popup
 
         // Appends the extension (none is raw download)
         let extension = "";
-        if (useZip != "raw")
-        {
+        if (useZip != "raw") {
             extension = "." + useZip;
         }
 
@@ -146,8 +147,8 @@ export default class Popup
         let nbDownload = 0;
         let currPage = 0;
         let maxPage = 0;
-        let html =  '<h3>' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
-        + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><br/><input type="button" id="button" value="Download"/>';
+        let html = '<h3>' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
+            + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><br/><input type="button" id="button" value="Download"/>';
         let lastMatch = /page=([0-9]+)" class="last">/.exec(pageHtml) // Get the number of pages
         if (lastMatch !== null) {
             currPage = parseInt(/page=([0-9]+)" class="page current">/.exec(pageHtml)![1]);
@@ -160,19 +161,18 @@ export default class Popup
         (document.getElementById('path') as HTMLInputElement).value = utils.cleanName(name, replaceSpaces);
         if (lastMatch !== null) {
             (document.getElementById('downloadInput') as HTMLInputElement).value = currPage + "-" + maxPage;
-            document.getElementById('buttonHelp')!.addEventListener('click', function() {
+            document.getElementById('buttonHelp')!.addEventListener('click', function () {
                 alert("Input the pages you want to download for the \"Download all\" feature\nWrite your pages separated by comma ',', you can also write range of number by separating them by a dash '-'\n"
-                + "Example: 2,4,6-10 will download the pages 2, 4 and 6 to 10 (included)");
+                    + "Example: 2,4,6-10 will download the pages 2, 4 and 6 to 10 (included)");
             });
         }
 
         // Invert all checkbox
-        document.getElementById('invert')!.addEventListener('click', function()
-        {
+        document.getElementById('invert')!.addEventListener('click', function () {
             let storageAllIds;
             chrome.storage.local.get({
                 allIds: []
-            }, function(elemsLocal) {
+            }, function (elemsLocal) {
                 // Iterate on all checkboxs and reverse the value
                 storageAllIds = elemsLocal.allIds;
                 for (let i = 0; i < allIds.length; i++) {
@@ -184,34 +184,36 @@ export default class Popup
                 chrome.storage.local.set({
                     allIds: storageAllIds
                 });
-                // @ts-ignore
-                chrome.tabs.executeScript(null, {
-                    file: "js/updateContent.js" // Update the checkboxs of the page
+                chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                    chrome.scripting.executeScript({
+                        target: { tabId: tabs[0].id! },
+                        files: ["js/updateContent.js"] // Update the checkboxs of the page
+                    });
                 });
             });
         });
 
         // Clear all checkboxs
-        document.getElementById('remove')!.addEventListener('click', function()
-        {
+        document.getElementById('remove')!.addEventListener('click', function () {
             // Just uncheck everything and empty local storage
-            allIds.forEach(function(id) {
+            allIds.forEach(function (id) {
                 (document.getElementById(id) as HTMLInputElement).checked = false;
             });
             chrome.storage.local.set({
                 allIds: []
             });
-            // @ts-ignore
-            chrome.tabs.executeScript(null, {
-                file: "js/updateContent.js" // Update the checkboxs of the page
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                chrome.scripting.executeScript({
+                    target: { tabId: tabs[0].id! },
+                    files: ["js/updateContent.js"] // Update the checkboxs of the page
+                });
             });
         });
 
         // Download button
-        document.getElementById('button')!.addEventListener('click', function()
-        {
-            let allDoujinshis : Record<string, string> = {};
-            allIds.forEach(function(id) {
+        document.getElementById('button')!.addEventListener('click', function () {
+            let allDoujinshis: Record<string, string> = {};
+            allIds.forEach(function (id) {
                 let elem = document.getElementById(id) as HTMLInputElement;
                 if (elem.checked) {
                     allDoujinshis[id] = elem.name;
@@ -219,9 +221,11 @@ export default class Popup
             });
             if (Object.keys(allDoujinshis).length > 0) { // There is at least one element selected, we launch download
                 let finalName = (document.getElementById('path') as HTMLInputElement).value;
-                (chrome.extension.getBackgroundPage() as any).downloadAllDoujinshis(allDoujinshis, finalName, function(error: string) {
-                    document.getElementById('action')!.innerHTML = message.errorDownload(error);
-                }, Popup.getInstance().updateProgress);
+                chrome.runtime.sendMessage({
+                    action: "downloadAllDoujinshis",
+                    allDoujinshis: allDoujinshis,
+                    finalName: finalName
+                });
                 self.updateProgress(0, finalName, false);
             } else {
                 document.getElementById('action')!.innerHTML = "You must select at least one element to download.";
@@ -230,7 +234,7 @@ export default class Popup
 
         if (nbDownload > 0) {
             // User input saying how many pages he wants to download
-            document.getElementById('downloadInput')!.addEventListener('change', function() {
+            document.getElementById('downloadInput')!.addEventListener('change', function () {
                 let pages = self.#parseDownloadAll(maxPage);
                 if (pages.length !== 0) {
                     (document.getElementById("buttonAll") as HTMLInputElement).value = 'Download all (' + pages.length + ' pages)';
@@ -238,10 +242,9 @@ export default class Popup
             });
 
             // Download many pages at once
-            document.getElementById('buttonAll')!.addEventListener('click', function()
-            {
-                let allDoujinshis : Record<string, string> = {};
-                allIds.forEach(function(id) {
+            document.getElementById('buttonAll')!.addEventListener('click', function () {
+                let allDoujinshis: Record<string, string> = {};
+                allIds.forEach(function (id) {
                     let elem = (document.getElementById(id) as HTMLInputElement);
                     allDoujinshis[id] = elem.name;
                 });
@@ -253,9 +256,13 @@ export default class Popup
                     let choice = confirm("You are going to download " + pages.length + " pages of doujinshi. Are you sure you want to continue?");
                     if (choice) {
                         let finalName = (document.getElementById('path') as HTMLInputElement).value;
-                        (chrome.extension.getBackgroundPage() as any).downloadAllPages(allDoujinshis, pages, finalName, function(error: string) {
-                            document.getElementById('action')!.innerHTML = 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
-                        }, self.updateProgress, self.url);
+                        chrome.runtime.sendMessage({
+                            action: "downloadAllPages",
+                            allDoujinshis: allDoujinshis,
+                            pagesArr: pages,
+                            path: finalName,
+                            url: self.url
+                        });
                         self.updateProgress(0, finalName, false);
                     }
                 }
@@ -263,24 +270,26 @@ export default class Popup
         }
 
         // We listen to all checkboxs on the page
-        allIds.forEach(function(id) {
-            (document.getElementById(id) as HTMLInputElement).addEventListener('change', function() {
+        allIds.forEach(function (id) {
+            (document.getElementById(id) as HTMLInputElement).addEventListener('change', function () {
                 let checked = this.checked;
                 chrome.storage.local.get({
                     allIds: []
-                }, function(elemsLocal) { // Add the ids in local storage so we can easily find them back from anywhere (even if page is reloaded etc)
+                }, function (elemsLocal) { // Add the ids in local storage so we can easily find them back from anywhere (even if page is reloaded etc)
                     chrome.storage.local.set({
                         allIds: self.#saveIdInLocalStorage(id, elemsLocal.allIds, checked)
                     });
                 });
-                // @ts-ignore
-                chrome.tabs.executeScript(null, {
-                    file: "js/updateContent.js" // Update the checkboxs of the page
+                chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                    chrome.scripting.executeScript({
+                        target: { tabId: tabs[0].id! },
+                        files: ["js/updateContent.js"] // Update the checkboxs of the page
+                    });
                 });
             });
             chrome.storage.local.get({
                 allIds: []
-            }, function(elemsLocal) {
+            }, function (elemsLocal) {
                 if (elemsLocal.allIds.includes(id)) {
                     (document.getElementById(id) as HTMLInputElement).checked = true;
                 }
@@ -300,10 +309,10 @@ export default class Popup
         return allIds;
     }
 
-    #parseDownloadAll(maxPage: number) : Array<number> | string {
+    #parseDownloadAll(maxPage: number): Array<number> | string {
         let pages: Array<number> = []
         let pageText = (document.getElementById('downloadInput') as HTMLInputElement).value;
-        pageText.split(',').forEach(function(e: string) {
+        pageText.split(',').forEach(function (e: string) {
             let elem = e.trim();
             let dash = elem.split('-');
             if (dash.length > 1) { // There is a dash in the number (ex: 1-5)
@@ -324,8 +333,7 @@ export default class Popup
                     if (!pages.includes(i)) pages.push(i);
                 }
             }
-            else
-            {
+            else {
                 let pageNb = parseInt(elem);
                 if (elem !== '' + pageNb) {
                     return message.invalidSyntax();
