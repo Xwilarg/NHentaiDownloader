@@ -55,8 +55,3 @@ npm test
 
 ![Overview](Preview/Overview-many.png)<br/>
 ![Folder](Preview/Folder-many.png)
-
-## Download many pages at a time
-
-![Overview](Preview/Overview-pages.png)<br/>
-![Folder](Preview/Folder-pages.png)
