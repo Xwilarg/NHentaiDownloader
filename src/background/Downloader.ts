@@ -1,4 +1,3 @@
-var fileSaver = require("file-saver");
 var JSZip = require("jszip");
 
 export default class Downloader {
@@ -91,14 +90,48 @@ export default class Downloader {
                     let self = this;
                     await new Promise((resolve, _reject) => {
                         resolve(
-                            this.#zip.generateAsync({ type: "blob" }, function (elem: any) {
+                            this.#zip.generateAsync({ type: "base64" }, function (elem: any) {
                                 try {
                                     self.updateProgress(elem.percent, elem.currentFile == null ? self.path : elem.currentFile, true);
                                 } catch (e) { } // Dead object
                             })
-                                .then(function (content: any) { // Zipping done
+                                .then(function (content: string) { // Zipping done
                                     self.currentProgress = 100;
-                                    fileSaver.saveAs(content, self.downloadName + "." + self.useZip);
+
+                                    let fileName = self.downloadName + "." + self.useZip;
+                                    let dataUrl = "data:application/zip;name=" + encodeURIComponent(fileName) + ";base64," + content;
+
+                                    // Listen to onDeterminingFilename to force the correct filename for the Data URL
+                                    const determineFilenameListener = (item: chrome.downloads.DownloadItem, suggest: (suggestion?: chrome.downloads.DownloadFilenameSuggestion) => void) => {
+                                        if (item.url === dataUrl || item.url.startsWith("data:application/zip")) {
+                                            suggest({ filename: fileName });
+                                            chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
+                                        }
+                                    };
+                                    chrome.downloads.onDeterminingFilename.addListener(determineFilenameListener);
+
+                                    chrome.downloads.download({
+                                        url: dataUrl,
+                                        filename: fileName,
+                                        saveAs: true
+                                    }, (downloadId) => {
+                                        if (downloadId === undefined) {
+                                            // Download failed to start
+                                            console.error("Failed to start download:", chrome.runtime.lastError);
+                                            chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
+                                            return;
+                                        }
+                                        // Handle the download lifecycle to clean up the listener just in case
+                                        const listener = (delta: chrome.downloads.DownloadDelta) => {
+                                            if (delta.id === downloadId && delta.state && delta.state.current !== 'in_progress') {
+                                                chrome.downloads.onChanged.removeListener(listener);
+                                                // Fallback just in case onDeterminingFilename didn't fire
+                                                chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
+                                            }
+                                        };
+                                        chrome.downloads.onChanged.addListener(listener);
+                                    });
+
                                     try {
                                         self.updateProgress(100, null, true); // Notify popup that we are done
                                     } catch (e) { } // Dead object
