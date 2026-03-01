@@ -120,7 +120,7 @@ export default class Popup {
                     tmpName = match[2].trim();
                 }
                 // Then we add a checkbox on the extension (preticked or not depending of previous result)
-                finalHtml += '<input id="' + match[1] + '" name="' + tmpName + '" type="checkbox" ' + (isChecked ? "checked" : "") + '/>' + tmpName + '<br/>';
+                finalHtml += '<span><input id="' + match[1] + '" name="' + tmpName + '" type="checkbox" ' + (isChecked ? "checked" : "") + '/>' + tmpName + '</span>';
                 allIds.push(match[1]);
                 i++;
             }
@@ -147,14 +147,14 @@ export default class Popup {
         let nbDownload = 0;
         let currPage = 0;
         let maxPage = 0;
-        let html = '<h3>' + i + ' doujinshi' + (i > 1 ? 's' : '') + ' found</h3>' + finalHtml
-            + '<input type="button" id="invert" value="Invert all"/><input type="button" id="remove" value="Clear all"/><br/><br/><input type="button" id="button" value="Download"/>';
+        let html = `<h3>${i} doujinshi${(i > 1 ? 's' : '')} found</h3><div class="doujin-popup-list">${finalHtml}</div>`
+            + '<input type="button" class="sub-button" id="invert" value="Invert all"/><input type="button" class="sub-button" id="remove" value="Clear all"/><br/><br/><input type="button" id="button" value="Download"/>';
         let lastMatch = /page=([0-9]+)" class="last">/.exec(pageHtml) // Get the number of pages
         if (lastMatch !== null) {
             currPage = parseInt(/page=([0-9]+)" class="page current">/.exec(pageHtml)![1]);
             maxPage = parseInt(lastMatch[1]);
             nbDownload = maxPage - currPage + 1;
-            html += '<br/><input type="button" id="buttonAll" value="Download all (' + nbDownload + ' pages)"/><br/><input type="text" id="downloadInput"/><input type="button" id="buttonHelp" value="?"/>';
+            html += '<br/><input type="button" id="buttonAll" value="Download all (' + nbDownload + ' pages)"/><br/><input type="text" id="downloadInput"/><input type="button" class="sub-button" id="buttonHelp" value="?"/>';
         }
         html += '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
         document.getElementById('action')!.innerHTML = html;
