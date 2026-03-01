@@ -133,11 +133,11 @@ export default class Downloader {
                                     self.currentProgress = 100;
 
                                     let fileName = self.downloadName + "." + self.useZip;
-                                    let dataUrl = "data:application/zip;name=" + encodeURIComponent(fileName) + ";base64," + content;
+                                    let dataUrl = `data:application/${self.useZip};name=` + encodeURIComponent(fileName) + ";base64," + content;
 
                                     // Listen to onDeterminingFilename to force the correct filename for the Data URL
                                     const determineFilenameListener = (item: chrome.downloads.DownloadItem, suggest: (suggestion?: chrome.downloads.DownloadFilenameSuggestion) => void) => {
-                                        if (item.url === dataUrl || item.url.startsWith("data:application/zip")) {
+                                        if (item.url === dataUrl) {
                                             suggest({ filename: fileName });
                                             chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
                                         }
