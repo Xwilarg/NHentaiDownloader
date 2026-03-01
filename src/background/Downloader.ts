@@ -40,9 +40,11 @@ export default class Downloader {
             resolve(
                 chrome.storage.sync.get({
                     useZip: "zip",
-                    maxConcurrentDownloads: "3"
+                    maxConcurrentDownloads: "3",
+                    openSaveDialogue: false
                 }, function(elems) {
                     self.useZip = elems.useZip;
+                    self.openSaveDialogue = elems.openSaveDialogue;
                     self.maxConcurrentDownloads = parseInt(elems.maxConcurrentDownloads);
                     if (self.useZip === "raw") {
                         self.currentProgress = 100;
@@ -145,7 +147,7 @@ export default class Downloader {
                                     chrome.downloads.download({
                                         url: dataUrl,
                                         filename: fileName,
-                                        saveAs: true
+                                        saveAs: self.openSaveDialogue
                                     }, (downloadId) => {
                                         if (downloadId === undefined) {
                                             // Download failed to start
@@ -253,6 +255,7 @@ export default class Downloader {
     }
 
     useZip: string; // How data must be downloaded
+    openSaveDialogue: boolean; // Do we ask the user where he want to save the file
     maxConcurrentDownloads: number = 3; // Number of concurrent downloads
     #json: any; // JSON containing all data
     #zip: typeof JSZip; // ZIP data that will be downloaded at the end
