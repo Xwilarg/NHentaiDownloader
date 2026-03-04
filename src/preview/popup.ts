@@ -188,7 +188,7 @@ export default class Popup {
             currPage = parseInt(/page=([0-9]+)" class="page current">/.exec(pageHtml)![1]);
             maxPage = parseInt(lastMatch[1]);
             nbDownload = maxPage - currPage + 1;
-            html += '<br/><input type="button" id="buttonAll" value="Download all (' + nbDownload + ' pages)"/><br/><input type="text" id="downloadInput"/><input type="button" class="sub-button" id="buttonHelp" value="?"/>';
+            html += '<br/><input disabled title="This feature is temporary unavailable, see https://github.com/Xwilarg/NHentaiDownloader/issues/114" type="button" id="buttonAll" value="Download all (' + nbDownload + ' pages)"/><br/><input type="text" id="downloadInput"/><input type="button" class="sub-button" id="buttonHelp" value="?"/>';
         }
         html += '<br/><br/>Downloads/<input type="text" id="path"/>' + extension;
         document.getElementById('action')!.innerHTML = html;

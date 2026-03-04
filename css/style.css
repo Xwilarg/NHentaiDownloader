@@ -40,7 +40,7 @@ html {
     border: none;
     padding: 15px 32px;
 }
-#button:hover, #buttonBack:hover, #buttonAll:hover{
+#button:hover:not(:disabled), #buttonBack:hover:not(:disabled), #buttonAll:hover:not(:disabled){
     background-color: transparent;
     color: #e31b53;
 }
@@ -57,7 +57,7 @@ input[type="button"] {
     border-radius: 5px;
 }
 
-input[type="button"]:hover {
+input[type="button"]:hover:not(:disabled) {
     color: #e31b53;
     background-color: white;
 }
