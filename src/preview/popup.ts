@@ -165,11 +165,20 @@ export default class Popup {
         }
 
         // Use URL for default download name
-        let parts = self.url.split('/')
+        let search = new URL(self.url).searchParams;
         let name;
-        if (parts[parts.length - 1] === "" || parts[parts.length - 1].startsWith("?page=")) name = parts[parts.length - 2];
-        else name = parts[parts.length - 1];
-        name = name.replace("q=", ""); // Artifact when doing a search
+        const parts = self.url.split('/').filter(s => s !== '');
+        const location = parts[parts.length - 1].startsWith("?") ? parts[parts.length - 2] : parts[parts.length - 1];
+        const query = search.get("q");
+        const page = search.get("page");
+
+        if (query && location == "search") name = query;
+        else
+        {
+            name = location;
+            if (query) name += `_${query}`;
+        }
+        if (page) name += `_${page}`;
 
         // Appends the extension (none is raw download)
         let extension = "";
