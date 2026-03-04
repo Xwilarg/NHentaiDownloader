@@ -78,7 +78,15 @@ export default class Popup {
     async #doujinshiPreviewAsync(id: string) {
         const resp = await fetch(this.parsing!.GetUrl(id));
         if (resp.status == 403) {
-            document.getElementById('action')!.innerHTML = message.invalidPage();
+            chrome.storage.sync.get({
+                htmlParsing: false,
+            }, function (elems) {
+                if (elems.htmlParsing) {
+                    document.getElementById('action')!.innerHTML = message.failFetch403Html();
+                } else {
+                    document.getElementById('action')!.innerHTML = message.failFetch403Generic();
+                }
+            });
         } else if (!resp.ok) {
             document.getElementById('action')!.innerHTML = message.errorOther(resp.status, resp.statusText);
         } else {

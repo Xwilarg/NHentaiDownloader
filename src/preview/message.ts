@@ -12,6 +12,14 @@ export module message
         return "This extension must be used on a page containing doujinshi(s) in nhentai.net.";
     }
     
+    export function failFetch403Html(): string {
+        return "Failed to get page information, disable \"Use HTML to get API info\" in the extension options and try again";
+    }
+
+    export function failFetch403Generic(): string {
+        return "Failed to get page information (code 403)";
+    }
+
     export function errorDownload(error: string): string {
         return 'An error occured while downloading the doujinshi: <b>' + error + '</b>';
     }
