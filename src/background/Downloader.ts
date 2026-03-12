@@ -263,13 +263,12 @@ export default class Downloader {
                         reader.readAsDataURL(blob);
                     });
 
-
                     const pageWidth = this.#pdf.internal.pageSize.getWidth();
                     const pageHeight = this.#pdf.internal.pageSize.getHeight();
 
                     const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
                     this.#pdf.addImage(dataUrl, format.substring(1), 0, 0, imgWidth * ratio, imgHeight * ratio);
-                        this.#pdf.addPage();
+                    if (currPage < this.#json.images.pages.length - 1) this.#pdf.addPage();
                 }
                 else
                 {
