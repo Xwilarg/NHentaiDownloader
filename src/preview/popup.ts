@@ -102,6 +102,8 @@ export default class Popup {
                     extension = ".zip";
                 else if (elems.useZip == "cbz")
                     extension = ".cbz";
+                else if (elems.useZip == "pdf")
+                    extension = ".pdf";
 
                 let title = utils.getDownloadName(elems.downloadName, json.title.pretty === "" ?
                     json.title.english.replace(/\[[^\]]+\]/g, '').replace(/\([^\)]+\)/g, '') : json.title.pretty,

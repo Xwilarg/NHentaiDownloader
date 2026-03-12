@@ -1,6 +1,6 @@
 {
   "name": "nhentaidownloader",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "description": "A chrome extension to download doujinshi from NHentai ",
   "directories": {
     "test": "test"
@@ -28,14 +28,15 @@
   },
   "homepage": "https://github.com/Xwilarg/NHentaiDownloader#readme",
   "devDependencies": {
-    "@types/chrome": "0.0.154",
-    "node-fetch": "^2.6.1",
-    "ts-loader": "^9.2.5",
-    "typescript": "^4.4.2",
-    "webpack": "^5.97.1",
-    "webpack-cli": "^4.8.0"
+    "@types/chrome": "0.1.37",
+    "node-fetch": "^3.3.2",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "webpack": "^5.105.4",
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "jszip": "3.9.1"
+    "jspdf": "^4.2.0",
+    "jszip": "3.10.1"
   }
 }

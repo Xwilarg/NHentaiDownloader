@@ -1,13 +1,16 @@
+import jsPDF from "jspdf";
+
 var JSZip = require("jszip");
 
 export default class Downloader {
-    constructor(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string, zip: typeof JSZip, downloadName: string | null) {
+    constructor(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string, zip: typeof JSZip, pdf: jsPDF, downloadName: string | null) {
         this.progressCallback = progressCallback;
         this.#errorCallback = errorCallback;
         this.currentProgress = 0;
         this.#doujinshiName = name;
         this.path = path;
         this.#zip = zip;
+        this.#pdf = pdf;
         this.downloadName = downloadName;
 
         // @ts-ignore
@@ -52,7 +55,7 @@ export default class Downloader {
                             self.updateProgress(100, this.#doujinshiName, false);
                         } catch (e) { } // Dead object
                     }
-                    self.#zip.folder(self.path);
+                    else if (self.useZip !== "pdf") self.#zip.folder(self.path);
                 })
             );
         });
@@ -107,7 +110,16 @@ export default class Downloader {
             // For multiple download, we want to skip the "zipping" part
             if (this.downloadName !== null) {
                 // Zipping
-                if (this.useZip !== "raw") { // Raw download doesn't need zipping
+                if (this.useZip === "pdf") {
+                    this.updateProgress(0, "in progress...", true);
+
+                    this.#pdf.save(this.downloadName + ".pdf");
+
+                    // TODO: must download from popup
+
+                    this.currentProgress = 100;
+                    this.updateProgress(100, null, true); // Notify popup that we are done
+                } else if (this.useZip !== "raw") { // Raw download doesn't need zipping
                     this.updateProgress(0, "in progress...", true);
 
                     let self = this;
@@ -222,18 +234,37 @@ export default class Downloader {
         let imageserverID = Math.floor(Math.random() * 4) + 1; // Pick a random image server ID 1-4
         let imageserverURL = `https://i${imageserverID}.nhentai.net/galleries/`; // Image server from which to download from
 
-        if (this.useZip !== "raw") { // ZIP (or equivalent) format
+        if (this.useZip !== "raw") { // ZIP (or equivalent) format²²
             const resp = await fetch(imageserverURL + this.#mediaId + '/' + filenameParsing);
             if (resp.ok) {
                 let blob = await resp.blob();
-                await new Promise((resolve, reject) => {
-                    var reader = new FileReader();
-                    reader.onload = () => {
-                        resolve(this.#zip.file(this.path + '/' + filename, reader.result as null));
-                    };
-                    reader.onerror = reject;
-                    reader.readAsArrayBuffer(blob);
-                });
+
+                if (this.useZip === "pdf")
+                {
+                    const bitmap = await createImageBitmap(blob);
+
+                    const imgWidth = bitmap.width;
+                    const imgHeight = bitmap.height;
+
+                    const dataUrl: string = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.readAsDataURL(blob);
+                    });
+
+                    this.#pdf.addImage(dataUrl, format.substring(1), 0, 0, imgWidth, imgHeight);
+                }
+                else
+                {
+                    await new Promise((resolve, reject) => {
+                        var reader = new FileReader();
+                        reader.onload = () => {
+                            resolve(this.#zip.file(this.path + '/' + filename, reader.result as null));
+                        };
+                        reader.onerror = reject;
+                        reader.readAsArrayBuffer(blob);
+                    });
+                }
             }
             else {
                 throw "Failed to fetch doujinshi page (status " + resp.status + ": " + resp.statusText + "), if the error persist please report it.";
@@ -259,6 +290,7 @@ export default class Downloader {
     maxConcurrentDownloads: number = 3; // Number of concurrent downloads
     #json: any; // JSON containing all data
     #zip: typeof JSZip; // ZIP data that will be downloaded at the end
+    #pdf: jsPDF;
     downloadName: string | null; // Name of the ZIP, null if should not download
     path: string; // Save path
     progressCallback: Function; // Function to call when progress is made

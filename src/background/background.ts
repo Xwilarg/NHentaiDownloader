@@ -3,6 +3,7 @@ import ApiParsing from "../parsing/ApiParsing";
 import HtmlParsing from "../parsing/HtmlParsing";
 import Downloader from "./Downloader";
 import { utils } from "../utils/utils";
+import jsPDF from "jspdf";
 var JSZip = require("jszip");
 
 chrome.tabs.onUpdated.addListener(function
@@ -48,7 +49,7 @@ module background {
 
     export function downloadDoujinshi(jsonTmp: any, path: string, errorCallback: Function, progressCallback: Function, name: string) {
         let zip = new JSZip();
-        currentDownloader = new Downloader(jsonTmp, path, errorCallback, progressCallback, name, zip, path);
+        currentDownloader = new Downloader(jsonTmp, path, errorCallback, progressCallback, name, zip, new jsPDF(), path);
         currentDownloader.startAsync();
     }
 
@@ -115,7 +116,8 @@ module background {
                     zipName = finalName;
                 }
                 currentDownloader = new Downloader(json, utils.cleanName(title, replaceSpaces), errorCallback, progressCallback, allDoujinshis[key],
-                    downloadSeparately ? new JSZip() : zip, // If we download separately, we make sure to not reuse the previous ZIP
+                    downloadSeparately ? new JSZip() : zip, // If we download separately, we make sure to not reuse the previous ZIP,
+                    new jsPDF(),
                     zipName);
                 // We download the ZIP file in the following cases:
                 // downloadSeparately is true (set in extension options)

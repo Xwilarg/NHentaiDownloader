@@ -21,7 +21,7 @@ module.exports = {
     options: './src/options/options.ts'
   },
   resolve: {
-    extensions: ['.ts'],
+    extensions: ['.ts', '.js']
   },
   output: {
     filename: '[name].js',

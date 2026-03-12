@@ -1,7 +1,7 @@
 # NHentaiDownloader
 An extension to download doujinshi from NHentai
 
-NHentai only allows to download doujinshi in .torrent format so I made this extension (with the help of [others amazing contributors](https://github.com/Xwilarg/NHentaiDownloader/graphs/contributors)) allowing to download them directly in ZIP, CBZ or raw format.<br/>
+NHentai only allows to download doujinshi in .torrent format so I made this extension (with the help of [others amazing contributors](https://github.com/Xwilarg/NHentaiDownloader/graphs/contributors)) allowing to download them directly in ZIP, CBZ or PDF format.<br/>
 You can either go on a doujinshi page to download it, or go to a page containing many of them to download them all at once.
 <br/><br/>
 
