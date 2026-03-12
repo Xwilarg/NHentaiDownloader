@@ -48,7 +48,10 @@ export default class Downloader {
                 }, function(elems) {
                     self.useZip = elems.useZip;
                     self.openSaveDialogue = elems.openSaveDialogue;
-                    self.maxConcurrentDownloads = parseInt(elems.maxConcurrentDownloads);
+                    self.maxConcurrentDownloads =
+                        self.useZip === "pdf"
+                            ? 1 // TODO: Use one worker for now to not mess page order
+                            : parseInt(elems.maxConcurrentDownloads);
                     if (self.useZip === "raw") {
                         self.currentProgress = 100;
                         try {
@@ -150,7 +153,9 @@ export default class Downloader {
             }
 
             // For multiple download, we want to skip the "zipping" part
-            if (this.downloadName !== null) {
+            if (this.downloadName === null) {
+
+            } else {
                 // Zipping
                 if (this.useZip !== "raw") { // Raw download doesn't need zipping
                     this.updateProgress(0, "in progress...", true);
@@ -233,7 +238,7 @@ export default class Downloader {
         let imageserverID = Math.floor(Math.random() * 4) + 1; // Pick a random image server ID 1-4
         let imageserverURL = `https://i${imageserverID}.nhentai.net/galleries/`; // Image server from which to download from
 
-        if (this.useZip !== "raw") { // ZIP (or equivalent) format²²
+        if (this.useZip !== "raw") {
             const resp = await fetch(imageserverURL + this.#mediaId + '/' + filenameParsing);
             if (resp.ok) {
                 let blob = await resp.blob();
@@ -251,7 +256,13 @@ export default class Downloader {
                         reader.readAsDataURL(blob);
                     });
 
-                    this.#pdf.addImage(dataUrl, format.substring(1), 0, 0, imgWidth, imgHeight);
+
+                    const pageWidth = this.#pdf.internal.pageSize.getWidth();
+                    const pageHeight = this.#pdf.internal.pageSize.getHeight();
+
+                    const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+                    this.#pdf.addImage(dataUrl, format.substring(1), 0, 0, imgWidth * ratio, imgHeight * ratio);
+                        this.#pdf.addPage();
                 }
                 else
                 {
