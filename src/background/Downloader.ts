@@ -154,16 +154,17 @@ export default class Downloader {
 
             // For multiple download, we want to skip the "zipping" part
             if (this.downloadName === null) {
-
+                if (this.useZip === "pdf") {
+                    this.#zip.file(`${this.path}.pdf`, this.#pdf.output("blob"));
+                }
             } else {
                 // Zipping
                 if (this.useZip !== "raw") { // Raw download doesn't need zipping
                     this.updateProgress(0, "in progress...", true);
 
-                    if (this.useZip === "pdf") {
+                    if (this.useZip === "pdf" && Object.keys(this.#zip.files).length === 0)
+                    {
                         this.updateProgress(0, "in progress...", true);
-
-                        this.#pdf.save(this.downloadName + ".pdf");
 
                         saveToComputer(this.#pdf.output("datauristring"));
 
@@ -172,6 +173,12 @@ export default class Downloader {
                     }
                     else
                     {
+                        if (this.useZip === "pdf")
+                        {
+                            this.#zip.file(`${this.path}.pdf`, this.#pdf.output("blob"));
+                            self.useZip = "zip";
+                        }
+
                         await new Promise((resolve, _reject) => {
                             resolve(
                                 this.#zip.generateAsync({ type: "base64" }, function (elem: any) {
