@@ -107,83 +107,82 @@ export default class Downloader {
                 }
             }
 
+            let self = this;
+            let saveToComputer = function (dataUrl: string) { // Zipping done
+                self.currentProgress = 100;
+
+                let fileName = self.downloadName + "." + self.useZip;
+
+                // Listen to onDeterminingFilename to force the correct filename for the Data URL
+                const determineFilenameListener = (item: chrome.downloads.DownloadItem, suggest: (suggestion?: chrome.downloads.DownloadFilenameSuggestion) => void) => {
+                    if (item.url === dataUrl) {
+                        suggest({ filename: fileName });
+                        chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
+                    }
+                };
+                chrome.downloads.onDeterminingFilename.addListener(determineFilenameListener);
+
+                chrome.downloads.download({
+                    url: dataUrl,
+                    filename: fileName,
+                    saveAs: self.openSaveDialogue
+                }, (downloadId) => {
+                    if (downloadId === undefined) {
+                        // Download failed to start
+                        console.error("Failed to start download:", chrome.runtime.lastError);
+                        chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
+                        return;
+                    }
+                    // Handle the download lifecycle to clean up the listener just in case
+                    const listener = (delta: chrome.downloads.DownloadDelta) => {
+                        if (delta.id === downloadId && delta.state && delta.state.current !== 'in_progress') {
+                            chrome.downloads.onChanged.removeListener(listener);
+                            // Fallback just in case onDeterminingFilename didn't fire
+                            chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
+                        }
+                    };
+                    chrome.downloads.onChanged.addListener(listener);
+                });
+
+                try {
+                    self.updateProgress(100, null, true); // Notify popup that we are done
+                } catch (e) { } // Dead object
+            }
+
             // For multiple download, we want to skip the "zipping" part
             if (this.downloadName !== null) {
                 // Zipping
-                if (this.useZip === "pdf") {
+                if (this.useZip !== "raw") { // Raw download doesn't need zipping
                     this.updateProgress(0, "in progress...", true);
 
-                    this.#pdf.save(this.downloadName + ".pdf");
+                    if (this.useZip === "pdf") {
+                        this.updateProgress(0, "in progress...", true);
 
-                    // TODO: must download from popup
+                        this.#pdf.save(this.downloadName + ".pdf");
 
-                    this.currentProgress = 100;
-                    this.updateProgress(100, null, true); // Notify popup that we are done
-                } else if (this.useZip !== "raw") { // Raw download doesn't need zipping
-                    this.updateProgress(0, "in progress...", true);
+                        saveToComputer(this.#pdf.output("datauristring"));
 
-                    let self = this;
-                    await new Promise((resolve, _reject) => {
-                        // Use web workers for faster zipping if available
-                        const zipOptions = {
-                            type: "blob",
-                            // Use web workers for better performance if supported
-                            streamFiles: false,
-                            compression: "DEFLATE",
-                            compressionOptions: { level: 5 }, // Balance between speed and compression
-                            // Use web workers for parallel processing if available
-                            worker: true
-                        };
-
-                        resolve(
-                            this.#zip.generateAsync({ type: "base64" }, function (elem: any) {
-                                try {
-                                    self.updateProgress(elem.percent, elem.currentFile == null ? self.path : elem.currentFile, true);
-                                } catch (e) { } // Dead object
-                            })
-                                .then(function (content: string) { // Zipping done
-                                    self.currentProgress = 100;
-
-                                    let fileName = self.downloadName + "." + self.useZip;
-                                    let dataUrl = `data:application/${self.useZip};name=` + encodeURIComponent(fileName) + ";base64," + content;
-
-                                    // Listen to onDeterminingFilename to force the correct filename for the Data URL
-                                    const determineFilenameListener = (item: chrome.downloads.DownloadItem, suggest: (suggestion?: chrome.downloads.DownloadFilenameSuggestion) => void) => {
-                                        if (item.url === dataUrl) {
-                                            suggest({ filename: fileName });
-                                            chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
-                                        }
-                                    };
-                                    chrome.downloads.onDeterminingFilename.addListener(determineFilenameListener);
-
-                                    chrome.downloads.download({
-                                        url: dataUrl,
-                                        filename: fileName,
-                                        saveAs: self.openSaveDialogue
-                                    }, (downloadId) => {
-                                        if (downloadId === undefined) {
-                                            // Download failed to start
-                                            console.error("Failed to start download:", chrome.runtime.lastError);
-                                            chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
-                                            return;
-                                        }
-                                        // Handle the download lifecycle to clean up the listener just in case
-                                        const listener = (delta: chrome.downloads.DownloadDelta) => {
-                                            if (delta.id === downloadId && delta.state && delta.state.current !== 'in_progress') {
-                                                chrome.downloads.onChanged.removeListener(listener);
-                                                // Fallback just in case onDeterminingFilename didn't fire
-                                                chrome.downloads.onDeterminingFilename.removeListener(determineFilenameListener);
-                                            }
-                                        };
-                                        chrome.downloads.onChanged.addListener(listener);
-                                    });
-
+                        this.currentProgress = 100;
+                        this.updateProgress(100, null, true); // Notify popup that we are done
+                    }
+                    else
+                    {
+                        await new Promise((resolve, _reject) => {
+                            resolve(
+                                this.#zip.generateAsync({ type: "base64" }, function (elem: any) {
                                     try {
-                                        self.updateProgress(100, null, true); // Notify popup that we are done
+                                        self.updateProgress(elem.percent, elem.currentFile == null ? self.path : elem.currentFile, true);
                                     } catch (e) { } // Dead object
+                                }).then((content: string) => {
+                                    
+                                    let fileName = self.downloadName + "." + self.useZip;
+                                    const dataUrl = `data:application/${self.useZip};name=` + encodeURIComponent(fileName) + ";base64," + content;
+                                    saveToComputer(dataUrl);
                                 })
-                        );
-                    });
+                            );
+                        });
+                    }
+
                 } else {
                     this.currentProgress = 100;
                     this.updateProgress(100, null, true); // Notify popup that we are done
