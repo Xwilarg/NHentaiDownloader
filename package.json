@@ -36,7 +36,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "jspdf": "^4.2.0",
+    "jspdf": "^4.2.1",
     "jszip": "3.10.1"
   }
 }
